@@ -10,17 +10,31 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.mykitaheatpump.internal;
+package org.openhab.binding.mykitaheatpump;
 
 /**
  * The {@link MyKitaHeatPumpConfiguration} class contains fields mapping thing configuration parameters.
  *
  * @author Marco Tombesi - Initial contribution
  */
+
 public class MyKitaHeatPumpConfiguration {
 
-    /**
-     * Sample configuration parameter. Replace with your own.
-     */
-    public String config1;
+    public boolean enableDiscovery;
+
+    public String host;
+    public int port;
+    public int id;
+
+    public int timeBetweenTransactionsMillis;
+
+    public int connectMaxTries;
+    public int reconnectAfterMillis;
+    public int timeBetweenReconnectMillis;
+    public int connectTimeoutMillis;
+
+    // poller
+    public long refresh;
+    public int maxTries = 3;
+    public long cacheMillis = 50L;
 }
