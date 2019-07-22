@@ -27,8 +27,6 @@ public class MyKitaHeatPumpBindingConstants {
     private static final String BINDING_ID = "mykitaheatpump";
 
     // List of all Thing Type UIDs
-    public static final ThingTypeUID THING_TYPE_SAMPLE = new ThingTypeUID(BINDING_ID, "sample");
+    public static final ThingTypeUID THING_TYPE_KITA_REGISTERS = new ThingTypeUID(BINDING_ID, "kita");
 
-    // List of all Channel ids
-    public static final String CHANNEL_1 = "channel1";
 }

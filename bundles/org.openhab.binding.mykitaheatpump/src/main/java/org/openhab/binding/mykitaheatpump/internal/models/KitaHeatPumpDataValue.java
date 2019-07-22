@@ -1,6 +1,6 @@
 package org.openhab.binding.mykitaheatpump.internal.models;
 
-public class DataValue {
+public class KitaHeatPumpDataValue {
 
     public String valueString;
 
