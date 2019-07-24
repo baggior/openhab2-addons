@@ -91,6 +91,16 @@
                 <advanced>true</advanced>
             </parameter>
             
+            
+            <!-- data channel config -->
+            <parameter name="updateUnchangedValuesEveryMillis" type="integer" min="0">
+                <label>Interval for updating unchanged values (ms)</label>
+                <default>1000</default>
+                <description>Interval to update unchanged values. Normally unchanged values are not updated. In milliseconds.</description>
+                <advanced>true</advanced>
+            </parameter>
+            
+            
 		</config-description>
 
 	</thing-type>

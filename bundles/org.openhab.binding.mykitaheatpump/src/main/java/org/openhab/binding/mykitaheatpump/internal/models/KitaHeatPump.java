@@ -26,17 +26,17 @@ public class KitaHeatPump {
     private void build() {
         this.data.clear();
 
-        KitaHeatPumpDataType dataType = new KitaHeatPumpDataType("acs", 100);
+        KitaHeatPumpDataType dataType = new KitaHeatPumpDataType("acs", 130);
         data.put(dataType, new KitaHeatPumpDataValue());
 
-        dataType = new KitaHeatPumpDataType("power", 200);
+        dataType = new KitaHeatPumpDataType("power", 172);
         data.put(dataType, new KitaHeatPumpDataValue());
 
-        dataType = new KitaHeatPumpDataType("onOffState", "onOffState", DataTypeEnum._switch, 300,
+        dataType = new KitaHeatPumpDataType("onOffState", "onOffState", DataTypeEnum._switch, 50,
                 RegisterTypeEnum.holding);
         data.put(dataType, new KitaHeatPumpDataValue());
 
-        dataType = new KitaHeatPumpDataType("contact", "contact", DataTypeEnum._bool, 400, RegisterTypeEnum.coil);
+        dataType = new KitaHeatPumpDataType("contact", "contact", DataTypeEnum._switch, 40, RegisterTypeEnum.coil);
         data.put(dataType, new KitaHeatPumpDataValue());
 
     }

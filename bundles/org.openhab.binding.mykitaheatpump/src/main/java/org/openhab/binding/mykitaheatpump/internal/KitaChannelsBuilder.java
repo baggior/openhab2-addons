@@ -14,15 +14,17 @@ import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.D
 @NonNullByDefault
 public class KitaChannelsBuilder {
     final KitaHeatPump kita;
-    final String thingUid;
+    // final String thingUid;
+    final ChannelsHandler channelsHandler;
 
-    KitaChannelsBuilder(KitaHeatPump kita, String thingUid) {
+    KitaChannelsBuilder(KitaHeatPump kita, ChannelsHandler channelsHandler) {
         this.kita = kita;
-        this.thingUid = thingUid;
+        this.channelsHandler = channelsHandler;
+        // this.thingUid = channelsHandler.thingHandler.getUID().getAsString();
     }
 
-    public static KitaChannelsBuilder create(KitaHeatPump kita, String thingUid) {
-        KitaChannelsBuilder builder = new KitaChannelsBuilder(kita, thingUid);
+    public static KitaChannelsBuilder create(KitaHeatPump kita, ChannelsHandler channelsHandler) {
+        KitaChannelsBuilder builder = new KitaChannelsBuilder(kita, channelsHandler);
         return builder;
     }
 
@@ -33,7 +35,9 @@ public class KitaChannelsBuilder {
             // todo
             String label = dataType.name;
             String description = dataType.description;
-            ChannelUID channelUID = new ChannelUID(thingUid + ":" + label);
+
+            ChannelUID channelUID = channelsHandler.getChannelUID(label);
+            // ChannelUID channelUID = new ChannelUID(thingUid + ":" + label);
 
             String acceptedItemType = this.convertToItemType(dataType.type);
 
@@ -58,7 +62,7 @@ public class KitaChannelsBuilder {
                 return "String";
 
             case _bool:
-                return "Contact";
+                return "Switch";
 
             case _switch:
                 return "Switch";
