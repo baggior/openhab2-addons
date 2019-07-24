@@ -27,6 +27,7 @@ import org.eclipse.smarthome.core.thing.ThingStatusInfo;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
+import org.eclipse.smarthome.core.types.State;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 import org.openhab.binding.mykitaheatpump.internal.services.ModbusMasterService;
 import org.openhab.io.transport.modbus.ModbusManager;
@@ -47,11 +48,11 @@ import org.slf4j.LoggerFactory;
 public class MyKitaHeatPumpHandler extends BaseThingHandler
         implements ModbusManagerListener, MyKitaHeatPumpThingHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(MyKitaHeatPumpHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private @Nullable volatile MyKitaHeatPumpConfiguration config;
-    private @Nullable volatile ModbusTCPSlaveEndpoint endpoint;
-    private @Nullable volatile EndpointPoolConfiguration poolConfiguration;
+    private @Nullable MyKitaHeatPumpConfiguration config;
+    private @Nullable ModbusTCPSlaveEndpoint endpoint;
+    private @Nullable EndpointPoolConfiguration poolConfiguration;
 
     protected Supplier<ModbusManager> managerRef;
 
@@ -60,12 +61,14 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
 
     final ModbusMasterService modbusMasterService;
     final KitaHeatPump kita;
+    final ChannelsHandler channelsHandler;
 
     public MyKitaHeatPumpHandler(Thing thing, Supplier<ModbusManager> managerRef) {
         super(thing);
         this.managerRef = managerRef;
         this.kita = new KitaHeatPump();
         this.modbusMasterService = new ModbusMasterService(kita, this);
+        this.channelsHandler = new ChannelsHandler(this);
     }
 
     @Override
@@ -120,9 +123,11 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
 
             this.configure();
 
-            List<Channel> channels = KitaChannelsBuilder.create(this.kita, this.thing.getUID().getAsString()).build();
+            List<Channel> channels = KitaChannelsBuilder.create(this.kita, this.channelsHandler).build();
             Thing newThing = this.editThing().withChannels(channels).build();
             this.updateThing(newThing);
+
+            channelsHandler.initialize();
 
             @Nullable
             ModbusTCPSlaveEndpoint endpoint = this.endpoint;
@@ -247,6 +252,7 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
         // this.callbackDelegator.resetCache();
 
         this.modbusMasterService.dispose();
+        this.channelsHandler.dispose();
 
         updateStatus(ThingStatus.OFFLINE);
     }
@@ -274,5 +280,20 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
             @Nullable String format) {
         super.updateStatus(status, communicationError != null ? communicationError : ThingStatusDetail.NONE, format);
 
+    }
+
+    void tryUpdateChannelState(ChannelUID uid, State state) {
+        try {
+            this.updateState(uid, state);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Error updating state '{}' (type {}) to channel {}: {} {}", state,
+                    Optional.ofNullable(state).map(s -> s.getClass().getName()).orElse("null"), uid,
+                    e.getClass().getName(), e.getMessage());
+        }
+    }
+
+    @Override
+    public ChannelsHandler getChannelsHandler() {
+        return this.channelsHandler;
     }
 }

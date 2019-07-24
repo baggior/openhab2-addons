@@ -37,4 +37,7 @@ public class MyKitaHeatPumpConfiguration {
     public long refresh;
     public int maxTries = 3;
     public long cacheMillis = 50L;
+
+    // data item update
+    long updateUnchangedValuesEveryMillis = 5000L;
 }

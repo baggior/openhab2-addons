@@ -73,4 +73,5 @@ public interface MyKitaHeatPumpThingHandler extends Identifiable<ThingUID> {
 
     public ThingStatusInfo getStatusInfo();
 
+    public ChannelsHandler getChannelsHandler();
 }
