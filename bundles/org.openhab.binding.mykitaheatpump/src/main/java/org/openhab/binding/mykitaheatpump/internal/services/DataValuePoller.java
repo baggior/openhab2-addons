@@ -11,8 +11,8 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.ThingStatusInfo;
 import org.eclipse.smarthome.core.thing.ThingUID;
-import org.openhab.binding.mykitaheatpump.MyKitaHeatPumpConfiguration;
-import org.openhab.binding.mykitaheatpump.MyKitaHeatPumpThingHandler;
+import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpConfiguration;
+import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpThingHandler;
 import org.openhab.binding.mykitaheatpump.internal.models.AtomicStampedKeyValue;
 import org.openhab.io.transport.modbus.BasicModbusReadRequestBlueprint;
 import org.openhab.io.transport.modbus.BasicPollTaskImpl;
@@ -26,7 +26,7 @@ import org.openhab.io.transport.modbus.PollTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DataValuePoller {
+class DataValuePoller {
 
     /**
      * {@link ModbusReadCallback} that delegates all tasks forward.
@@ -204,8 +204,8 @@ public class DataValuePoller {
 
     private final @NonNull ModbusReadFunctionCode functionCode;
 
-    private final int start;
-    private final int length;
+    int start;
+    int length;
 
     // ModbusMasterService modbusService;
 
@@ -220,8 +220,8 @@ public class DataValuePoller {
 
     private final ReadCallbackDelegator callbackDelegator = new ReadCallbackDelegator();
 
-    public DataValuePoller(@NonNull MyKitaHeatPumpThingHandler myThingHandler,
-            @NonNull ModbusReadFunctionCode functionCode, int start, int length) {
+    DataValuePoller(@NonNull MyKitaHeatPumpThingHandler myThingHandler, @NonNull ModbusReadFunctionCode functionCode,
+            int start, int length) {
 
         this.myThingHandler = myThingHandler;
         this.managerRef = myThingHandler.getManagerRef();
@@ -234,7 +234,7 @@ public class DataValuePoller {
         this.disposed = false;
     }
 
-    public synchronized void unregisterPollTask() {
+    synchronized void unregisterPollTask() {
         logger.trace("unregisterPollTask()");
         // Mark handler as disposed as soon as possible to halt processing of callbacks
         disposed = true;
@@ -257,7 +257,7 @@ public class DataValuePoller {
      * @throws EndpointNotInitializedException in case the bridge initialization is not complete. This should only
      *             happen in transient conditions, for example, when bridge is initializing.
      */
-    public synchronized void registerPollTask() {
+    synchronized void registerPollTask() {
         logger.trace("registerPollTask()");
         if (pollTask != null) {
             throw new RuntimeException("pollTask should be unregistered before registering a new one!");

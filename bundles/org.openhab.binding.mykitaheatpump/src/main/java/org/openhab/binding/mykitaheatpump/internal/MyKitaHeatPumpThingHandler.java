@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.mykitaheatpump;
+package org.openhab.binding.mykitaheatpump.internal;
 
 import java.util.function.Supplier;
 

@@ -1,10 +1,11 @@
 package org.openhab.binding.mykitaheatpump.internal.services;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.mykitaheatpump.MyKitaHeatPumpThingHandler;
+import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpThingHandler;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.RegisterTypeEnum;
 import org.openhab.io.transport.modbus.ModbusReadFunctionCode;
@@ -19,7 +20,8 @@ public class ModbusMasterService {
     final KitaHeatPump kita;
     final MyKitaHeatPumpThingHandler myThingHandler;
 
-    final List<DataValuePoller> pollers = new ArrayList<DataValuePoller>();
+    // final List<DataValuePoller> pollers = new ArrayList<DataValuePoller>();
+    final Map<ModbusReadFunctionCode, @Nullable DataValuePoller> pollers = new HashMap<ModbusReadFunctionCode, @Nullable DataValuePoller>();
 
     public ModbusMasterService(KitaHeatPump kita, MyKitaHeatPumpThingHandler myThingHandler) {
 
@@ -37,15 +39,31 @@ public class ModbusMasterService {
             int address = dataType.address;
 
             ModbusReadFunctionCode fnCode = this.convertToModbusReadFunctionCode(register);
-            int startAddress = address;
-            int length = 1;
+            DataValuePoller poller = pollers.get(fnCode);
+            if (poller == null) {
+                int startAddress = address;
+                int length = 1;
+                poller = new DataValuePoller(myThingHandler, fnCode, startAddress, length);
 
-            DataValuePoller poller = new DataValuePoller(myThingHandler, fnCode, startAddress, length);
-            pollers.add(poller);
+            } else {
+                int startAddress = address;
+                int oldEndAddress = poller.start + poller.length;
+                int newEndAddress = startAddress + 1;
+                if (startAddress < poller.start) {
+                    poller.start = startAddress;
+                    poller.length = oldEndAddress - startAddress;
+                } else if (newEndAddress > oldEndAddress) {
+                    poller.length = newEndAddress - poller.start;
+                }
+
+            }
+            pollers.put(fnCode, poller);
         });
 
-        pollers.forEach(poller -> {
-            poller.registerPollTask();
+        pollers.values().forEach((poller) -> {
+            if (poller != null) {
+                poller.registerPollTask();
+            }
         });
     }
 
@@ -63,9 +81,10 @@ public class ModbusMasterService {
 
     public void dispose() {
 
-        pollers.forEach(poller -> {
-
-            poller.unregisterPollTask();
+        pollers.values().forEach(poller -> {
+            if (poller != null) {
+                poller.unregisterPollTask();
+            }
         });
         pollers.clear();
 

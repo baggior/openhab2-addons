@@ -27,8 +27,6 @@ import org.eclipse.smarthome.core.thing.ThingStatusInfo;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
-import org.openhab.binding.mykitaheatpump.MyKitaHeatPumpConfiguration;
-import org.openhab.binding.mykitaheatpump.MyKitaHeatPumpThingHandler;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 import org.openhab.binding.mykitaheatpump.internal.services.ModbusMasterService;
 import org.openhab.io.transport.modbus.ModbusManager;
