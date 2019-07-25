@@ -6,5 +6,31 @@
 	<name>MyTHSensors Binding</name>
 	<description>This is the binding for MyTHSensors.</description>
 	<author>Marco Tombesi</author>
+	
+	
+	<config-description>
+	         
+       <parameter name="host" type="text" required="true">
+           <label>Gateway IP Address or hostname</label>
+           <description>Network address of the gateway device</description>
+           <default>localhost</default>
+           <context>network-address</context>
+           <required>true</required>
+       </parameter>
+       <parameter name="port" type="integer">
+           <label>Gateway Port</label>
+           <description>Port of the slave</description>
+           <default>502</default>   
+           <required>true</required>        
+       </parameter>
+       
+       <parameter name="discoveryTime" type="integer">
+           <label>Dicovery pool time in milliseconds</label>
+           <description>How much time to wait between new Thing discovery polling. 0: disable</description>
+           <default>60000</default>           
+           <required>true</required>           
+       </parameter>
+            
+	</config-description>
 
 </binding:binding>

@@ -5,16 +5,16 @@
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
 	<!-- Sample Thing Type -->
-	<thing-type id="thsensor">
-		<label>THSensors Thing</label>
-		<description>Eurotherm THSensors Thing</description>
+	<thing-type id="sample">
+		<label>Sample Thing</label>
+		<description>Sample thing for MyTHSensors Binding</description>
 
 		<channels>
 			<channel id="channel1" typeId="sample-channel" />
 		</channels>
 
 		<config-description>
-			<parameter name="config" type="text" required="true">
+			<parameter name="config1" type="text" required="true">
 				<label>Sample Parameter</label>
 				<description>This is a sample text configuration parameter</description>
 			</parameter>

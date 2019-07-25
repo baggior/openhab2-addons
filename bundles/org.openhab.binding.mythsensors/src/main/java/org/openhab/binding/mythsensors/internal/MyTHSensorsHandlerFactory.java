@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.mythsensors.internal;
 
-import static org.openhab.binding.mythsensors.internal.MyTHSensorsBindingConstants.*;
+import static org.openhab.binding.mythsensors.internal.MyTHSensorsBindingConstants.THING_TYPE_THSENSOR;
 
 import java.util.Collections;
 import java.util.Set;
@@ -24,7 +24,10 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
+import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link MyTHSensorsHandlerFactory} is responsible for creating things and thing
@@ -36,7 +39,9 @@ import org.osgi.service.component.annotations.Component;
 @Component(configurationPid = "binding.mythsensors", service = ThingHandlerFactory.class)
 public class MyTHSensorsHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_SAMPLE);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_THSENSOR);
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -47,10 +52,18 @@ public class MyTHSensorsHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (THING_TYPE_SAMPLE.equals(thingTypeUID)) {
+        if (THING_TYPE_THSENSOR.equals(thingTypeUID)) {
             return new MyTHSensorsHandler(thing);
         }
 
         return null;
+    }
+
+    @Override
+    protected void activate(ComponentContext componentContext) {
+        super.activate(componentContext);
+
+        // TODO Auto-generated method stub
+        logger.debug("MyTHSensorsHandlerFactory.activate componentContext \n\t {}", componentContext.getProperties());
     }
 }
