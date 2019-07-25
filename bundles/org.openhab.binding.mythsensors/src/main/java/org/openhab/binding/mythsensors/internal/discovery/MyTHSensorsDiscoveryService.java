@@ -1,20 +1,26 @@
-package org.openhab.binding.mythsensors.internal;
+package org.openhab.binding.mythsensors.internal.discovery;
 
 import static org.openhab.binding.mythsensors.internal.MyTHSensorsBindingConstants.THING_TYPE_THSENSOR;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
 import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
 import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.ThingUID;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(configurationPid = "discovery.mythsensors", service = DiscoveryService.class, immediate = true)
+@Component(configurationPid = "binding.mythsensors", service = { DiscoveryService.class,
+        MyTHSensorsDiscoveryService.class })
 public class MyTHSensorsDiscoveryService extends AbstractDiscoveryService {
 
     public static final String DEFAULT_THING_ID = "unknown";
@@ -31,9 +37,7 @@ public class MyTHSensorsDiscoveryService extends AbstractDiscoveryService {
 
     @Override
     protected void startScan() {
-        logger.debug("Starting MyTHSensorsDiscoveryService discovery !");
-
-        // TODO Auto-generated method stub
+        logger.debug("Start MyTHSensorsDiscoveryService discovery !");
 
         // found
         final String thingId = DEFAULT_THING_ID;
@@ -47,11 +51,27 @@ public class MyTHSensorsDiscoveryService extends AbstractDiscoveryService {
         logger.debug("End MyTHSensorsDiscoveryService discovery.");
     }
 
-    // @Override
-    // protected void activate(@Nullable Map<@NonNull String, @Nullable Object> configProperties) {
-    // // TODO Auto-generated method stub
-    // logger.debug("DiscoveryService.activate configProperties \n\t {}", configProperties);
-    // super.activate(configProperties);
-    // }
+    @Override
+    @Activate
+    protected void activate(@Nullable Map<@NonNull String, @Nullable Object> configProperties) {
+        // TODO Auto-generated method stub
+        logger.debug("MyTHSensorsDiscoveryService.activate configProperties \n\t {}", configProperties);
+
+        if (configProperties != null) {
+            String host = (String) configProperties.get("host");
+            logger.debug("MyTHSensorsDiscoveryService.activate host: {}", host);
+        }
+
+        super.activate(configProperties); // starts background discovery
+    }
+
+    @Override
+    @Modified
+    protected void modified(@Nullable Map<@NonNull String, @Nullable Object> configProperties) {
+        // TODO Auto-generated method stub
+        super.modified(configProperties);
+
+        logger.debug("MyTHSensorsDiscoveryService.modified configProperties \n\t {}", configProperties);
+    }
 
 }
