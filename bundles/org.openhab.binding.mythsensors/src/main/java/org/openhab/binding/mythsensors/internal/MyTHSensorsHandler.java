@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.mythsensors.internal;
 
-import static org.openhab.binding.mythsensors.internal.MyTHSensorsBindingConstants.*;
+import static org.openhab.binding.mythsensors.internal.MyTHSensorsBindingConstants.CHANNEL_1;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -95,4 +95,5 @@ public class MyTHSensorsHandler extends BaseThingHandler {
         // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
         // "Can not access device as username and/or password are invalid");
     }
+
 }
