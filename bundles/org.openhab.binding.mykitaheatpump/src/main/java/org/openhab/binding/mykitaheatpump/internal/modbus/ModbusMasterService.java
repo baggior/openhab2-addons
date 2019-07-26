@@ -1,4 +1,4 @@
-package org.openhab.binding.mykitaheatpump.internal.services;
+package org.openhab.binding.mykitaheatpump.internal.modbus;
 
 import java.math.BigDecimal;
 import java.util.HashMap;

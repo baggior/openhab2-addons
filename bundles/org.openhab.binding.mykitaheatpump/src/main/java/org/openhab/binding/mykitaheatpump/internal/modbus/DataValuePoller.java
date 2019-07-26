@@ -1,4 +1,4 @@
-package org.openhab.binding.mykitaheatpump.internal.services;
+package org.openhab.binding.mykitaheatpump.internal.modbus;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
