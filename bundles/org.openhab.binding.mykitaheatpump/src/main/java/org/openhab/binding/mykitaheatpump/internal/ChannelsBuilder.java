@@ -12,19 +12,19 @@ import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.DataTypeEnum;
 
 @NonNullByDefault
-public class KitaChannelsBuilder {
+public class ChannelsBuilder {
     final KitaHeatPump kita;
     // final String thingUid;
     final ChannelsHandler channelsHandler;
 
-    KitaChannelsBuilder(KitaHeatPump kita, ChannelsHandler channelsHandler) {
+    ChannelsBuilder(KitaHeatPump kita, ChannelsHandler channelsHandler) {
         this.kita = kita;
         this.channelsHandler = channelsHandler;
         // this.thingUid = channelsHandler.thingHandler.getUID().getAsString();
     }
 
-    public static KitaChannelsBuilder create(KitaHeatPump kita, ChannelsHandler channelsHandler) {
-        KitaChannelsBuilder builder = new KitaChannelsBuilder(kita, channelsHandler);
+    public static ChannelsBuilder create(KitaHeatPump kita, ChannelsHandler channelsHandler) {
+        ChannelsBuilder builder = new ChannelsBuilder(kita, channelsHandler);
         return builder;
     }
 

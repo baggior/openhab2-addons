@@ -28,8 +28,8 @@ import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.State;
+import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusMasterService;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
-import org.openhab.binding.mykitaheatpump.internal.services.ModbusMasterService;
 import org.openhab.io.transport.modbus.ModbusManager;
 import org.openhab.io.transport.modbus.ModbusManagerListener;
 import org.openhab.io.transport.modbus.endpoint.EndpointPoolConfiguration;
@@ -123,7 +123,7 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
 
             this.configure();
 
-            List<Channel> channels = KitaChannelsBuilder.create(this.kita, this.channelsHandler).build();
+            List<Channel> channels = ChannelsBuilder.create(this.kita, this.channelsHandler).build();
             Thing newThing = this.editThing().withChannels(channels).build();
             this.updateThing(newThing);
 

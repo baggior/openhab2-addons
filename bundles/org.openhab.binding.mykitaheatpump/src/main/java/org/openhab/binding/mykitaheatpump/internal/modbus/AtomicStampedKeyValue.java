@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.mykitaheatpump.internal.models;
+package org.openhab.binding.mykitaheatpump.internal.modbus;
 
 import java.util.Objects;
 
@@ -26,7 +26,7 @@ import org.eclipse.jdt.annotation.Nullable;
  * @param <V> type of the value
  */
 @NonNullByDefault
-public class AtomicStampedKeyValue<K, V> implements Cloneable {
+class AtomicStampedKeyValue<K, V> implements Cloneable {
 
     private long stamp;
     private K key;
@@ -45,7 +45,7 @@ public class AtomicStampedKeyValue<K, V> implements Cloneable {
      *
      * @throws NullPointerException when key or value is null
      */
-    public AtomicStampedKeyValue(long stamp, K key, V value) {
+    AtomicStampedKeyValue(long stamp, K key, V value) {
         Objects.requireNonNull(key, "key should not be null!");
         Objects.requireNonNull(value, "value should not be null!");
         this.stamp = stamp;
@@ -62,7 +62,7 @@ public class AtomicStampedKeyValue<K, V> implements Cloneable {
      *
      * @throws NullPointerException when key or value is null
      */
-    public synchronized void update(long stamp, K key, V value) {
+    synchronized void update(long stamp, K key, V value) {
         Objects.requireNonNull(key, "key should not be null!");
         Objects.requireNonNull(value, "value should not be null!");
         this.stamp = stamp;
@@ -77,7 +77,7 @@ public class AtomicStampedKeyValue<K, V> implements Cloneable {
      * @throws CloneNotSupportedException
      */
     @SuppressWarnings("unchecked")
-    public synchronized AtomicStampedKeyValue<K, V> copy() {
+    synchronized AtomicStampedKeyValue<K, V> copy() {
         return (AtomicStampedKeyValue<K, V>) this.clone();
     }
 
@@ -100,7 +100,7 @@ public class AtomicStampedKeyValue<K, V> implements Cloneable {
      * @param stampMin
      * @return null, if the stamp of this instance is before stampMin. Otherwise return the data copied
      */
-    public synchronized @Nullable AtomicStampedKeyValue<K, V> copyIfStampAfter(long stampMin) {
+    synchronized @Nullable AtomicStampedKeyValue<K, V> copyIfStampAfter(long stampMin) {
         if (stampMin <= this.stamp) {
             return new AtomicStampedKeyValue<>(this);
         } else {

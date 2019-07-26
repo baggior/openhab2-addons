@@ -1,4 +1,4 @@
-package org.openhab.binding.mykitaheatpump.internal.services;
+package org.openhab.binding.mykitaheatpump.internal.modbus;
 
 import java.util.Map;
 import java.util.stream.Stream;
@@ -12,7 +12,6 @@ import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.types.State;
 import org.openhab.binding.mykitaheatpump.internal.ChannelsHandler;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpConfiguration;
-import org.openhab.binding.mykitaheatpump.internal.models.AtomicStampedKeyValue;
 import org.openhab.io.transport.modbus.BitArray;
 import org.openhab.io.transport.modbus.ModbusReadCallback;
 import org.openhab.io.transport.modbus.ModbusReadRequestBlueprint;
