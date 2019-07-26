@@ -9,28 +9,43 @@
 	
 	
 	<config-description>
+	   <parameter-group name="host" >
+            <label>Host</label>
+            <description>Parametri di connessione TCP del gateway modbus</description>
+       </parameter-group>
+       <parameter-group name="modbus" >
+            <label>Modbus</label>
+            <description>Parametri di configurazione del gateway modbus</description>
+       </parameter-group>
+       
 	         
-       <parameter name="host" type="text" required="true">
+       <parameter name="host" type="text" required="true" groupName="host">
            <label>Gateway IP Address or hostname</label>
            <description>Network address of the gateway device</description>
            <default>localhost</default>
-           <context>network-address</context>
-           <required>true</required>
+           <context>network-address</context>           
        </parameter>
-       <parameter name="port" type="integer">
+       <parameter name="port" type="integer" required="true" groupName="host">
            <label>Gateway Port</label>
            <description>Port of the slave</description>
-           <default>502</default>   
-           <required>true</required>        
+           <default>502</default>  
+           <context>network-address</context>
        </parameter>
        
-       <parameter name="discoveryTime" type="integer">
-           <label>Dicovery pool time in milliseconds</label>
-           <description>How much time to wait between new Thing discovery polling. 0: disable</description>
-           <default>60000</default>           
+       <parameter name="minUnitIdToScan" type="integer" min="1" max="255" groupName="modbus">
+           <label>Minimum unit identifier to scan for Dicovery (1)</label>
+           <description>Starting modbus unit identifier to scan for</description>
+           <default>1</default>           
            <required>true</required>           
        </parameter>
-            
+       <parameter name="maxUnitIdToScan" type="integer" min="1" max="255" groupName="modbus">
+           <label>Maximum unit identifier to scan for Dicovery</label>
+           <description>Starting modbus unit identifier to scan for</description>
+           <default>16</default>           
+           <required>true</required>           
+       </parameter>
+
+      
 	</config-description>
 
 </binding:binding>

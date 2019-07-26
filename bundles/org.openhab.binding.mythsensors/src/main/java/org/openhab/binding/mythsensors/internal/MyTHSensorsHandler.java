@@ -76,16 +76,16 @@ public class MyTHSensorsHandler extends BaseThingHandler {
         // we set this upfront to reliably check status updates in unit tests.
         updateStatus(ThingStatus.UNKNOWN);
 
-        // Example for background initialization:
-        scheduler.execute(() -> {
-            boolean thingReachable = true; // <background task with long running initialization here>
-            // when done do:
-            if (thingReachable) {
-                updateStatus(ThingStatus.ONLINE);
-            } else {
-                updateStatus(ThingStatus.OFFLINE);
-            }
-        });
+        // // Example for background initialization:
+        // scheduler.execute(() -> {
+        // boolean thingReachable = true; // <background task with long running initialization here>
+        // // when done do:
+        // if (thingReachable) {
+        // updateStatus(ThingStatus.ONLINE);
+        // } else {
+        // updateStatus(ThingStatus.OFFLINE);
+        // }
+        // });
 
         // logger.debug("Finished initializing!");
 
@@ -94,6 +94,12 @@ public class MyTHSensorsHandler extends BaseThingHandler {
         // Add a description to give user information to understand why thing does not work as expected. E.g.
         // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
         // "Can not access device as username and/or password are invalid");
+
+    }
+
+    public boolean hasConfigurationError() {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

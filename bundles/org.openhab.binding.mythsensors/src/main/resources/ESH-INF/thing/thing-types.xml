@@ -14,10 +14,16 @@
 		</channels>
 
 		<config-description>
-			<parameter name="config" type="text" required="true">
-				<label>Sample Parameter</label>
-				<description>This is a sample text configuration parameter</description>
+			<parameter name="unitId" type="integer" required="true" readOnly="true">
+				<label>Modbus Unit identifier</label>
+				<description>Modbus Unit identifier</description>
 			</parameter>
+		    <parameter name="refresh" type="integer" required="true" min="0">
+               <label>Poll interval (ms)</label>
+               <description>Poll interval in milliseconds. Use zero to disable automatic polling.</description>
+               <default>500</default>
+           </parameter>
+           
 		</config-description>
 
 	</thing-type>
