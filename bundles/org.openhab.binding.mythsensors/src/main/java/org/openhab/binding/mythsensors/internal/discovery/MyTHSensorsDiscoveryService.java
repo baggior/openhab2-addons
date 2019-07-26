@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
@@ -13,9 +14,10 @@ import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
 import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.ThingUID;
+import org.openhab.io.transport.modbus.ModbusManager;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,24 +33,35 @@ public class MyTHSensorsDiscoveryService extends AbstractDiscoveryService {
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_THSENSOR);
     private static final int DISCOVERY_TIMEOUT_SECONDS = 10;
 
+    private String host;
+    private Integer port;
+    private Integer minId;
+    private Integer maxId;
+
+    private ModbusManager manager;
+
     public MyTHSensorsDiscoveryService() {
         super(SUPPORTED_THING_TYPES_UIDS, DISCOVERY_TIMEOUT_SECONDS);
     }
 
     @Override
     protected void startScan() {
-        logger.debug("Start MyTHSensorsDiscoveryService discovery !");
 
-        // found
-        final String thingId = DEFAULT_THING_ID;
+        if (StringUtils.isNotBlank(host)) {
+            logger.debug("Start MyTHSensorsDiscoveryService discovery scan !");
 
-        ThingUID thingUID = new ThingUID(THING_TYPE_THSENSOR, thingId);
-        super.thingDiscovered(
-                DiscoveryResultBuilder.create(thingUID).withLabel(DEFAULT_THING_LABEL_PREFIX + " - " + thingId)
-                        .withRepresentationProperty(DEFAULT_THING_ID).build());
+            // TODO: found
+            final String thingId = DEFAULT_THING_ID;
+
+            ThingUID thingUID = new ThingUID(THING_TYPE_THSENSOR, thingId);
+            super.thingDiscovered(DiscoveryResultBuilder.create(thingUID)
+                    .withLabel(DEFAULT_THING_LABEL_PREFIX + " - " + thingId).withProperty("unitId", thingId)
+                    .withProperty("unitId", 7).withRepresentationProperty("unitId").build());
+
+            logger.debug("End MyTHSensorsDiscoveryService discovery scan.");
+        }
 
         this.stopScan();
-        logger.debug("End MyTHSensorsDiscoveryService discovery.");
     }
 
     @Override
@@ -58,20 +71,24 @@ public class MyTHSensorsDiscoveryService extends AbstractDiscoveryService {
         logger.debug("MyTHSensorsDiscoveryService.activate configProperties \n\t {}", configProperties);
 
         if (configProperties != null) {
-            String host = (String) configProperties.get("host");
-            logger.debug("MyTHSensorsDiscoveryService.activate host: {}", host);
+            this.host = (String) configProperties.get("host");
+            this.port = Integer.decode((String) configProperties.get("port"));
+            this.minId = Integer.decode((String) configProperties.get("minUnitIdToScan"));
+            this.maxId = Integer.decode((String) configProperties.get("maxUnitIdToScan"));
+            logger.debug("MyTHSensorsDiscoveryService.activate host: {}:{}, id to scan {} - {}", host, port, minId,
+                    maxId);
         }
 
         super.activate(configProperties); // starts background discovery
     }
 
-    @Override
-    @Modified
-    protected void modified(@Nullable Map<@NonNull String, @Nullable Object> configProperties) {
-        // TODO Auto-generated method stub
-        super.modified(configProperties);
-
-        logger.debug("MyTHSensorsDiscoveryService.modified configProperties \n\t {}", configProperties);
+    @Reference
+    public void setModbusManager(ModbusManager manager) {
+        logger.debug("Setting ModbusManager: {}", manager);
+        this.manager = manager;
     }
 
+    public void unsetModbusManager(ModbusManager manager) {
+        this.manager = null;
+    }
 }

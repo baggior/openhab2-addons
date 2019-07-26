@@ -22,5 +22,7 @@ public class MyTHSensorsConfiguration {
     /**
      * Sample configuration parameter. Replace with your own.
      */
-    public String config1;
+    public int unitId;
+
+    public long refresh;
 }
