@@ -2,51 +2,33 @@ package org.openhab.binding.mythsensors.internal.modbus;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.types.State;
-import org.openhab.io.transport.modbus.BasicModbusReadRequestBlueprint;
-import org.openhab.io.transport.modbus.BasicPollTaskImpl;
+import org.openhab.binding.mythsensors.internal.MyTHSensorsHandler;
 import org.openhab.io.transport.modbus.BitArray;
-import org.openhab.io.transport.modbus.ModbusManager;
-import org.openhab.io.transport.modbus.ModbusReadCallback;
 import org.openhab.io.transport.modbus.ModbusReadFunctionCode;
 import org.openhab.io.transport.modbus.ModbusReadRequestBlueprint;
 import org.openhab.io.transport.modbus.ModbusRegisterArray;
-import org.openhab.io.transport.modbus.PollTask;
 import org.openhab.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
 import org.openhab.io.transport.modbus.endpoint.ModbusTCPSlaveEndpoint;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @NonNullByDefault
-public class ModbusMasterService {
-
-    public static enum RegisterTypeEnum {
-        coil,
-        holding
-    }
-
-    public static class ModbusOneTimeResponse {
-        @Nullable
-        public BitArray bitsarray;
-        @Nullable
-        public ModbusRegisterArray registers;
-        @Nullable
-        public Exception error;
-
-    }
+public class ModbusPollers {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    // final MyTHSensorsHandler myThingHandler;
-    final ModbusManager modbusManager;
+    final MyTHSensorsHandler myThingHandler;
+    final ModbusMasterService modbusMasterService;
     final ModbusSlaveEndpoint modbusSlaveEndpoint;
+
+    // final List<DataValuePoller> pollers = new ArrayList<DataValuePoller>();
+    final Map<ModbusReadFunctionCode, @Nullable ModbusDataValuePoller> pollers = new HashMap<ModbusReadFunctionCode, @Nullable ModbusDataValuePoller>();
 
     int cacheMillis = 50; // TODO
 
@@ -54,18 +36,83 @@ public class ModbusMasterService {
     int port = 502; // TODO
     String host = "localhost"; // TODO
 
-    Map<String, @Nullable Object> configProperties;
+    private final ReadCallback readCallback = new ReadCallback(this);
 
-    public ModbusMasterService(ModbusManager modbusManager, Map<String, @Nullable Object> configProperties) {
+    public ModbusPollers(MyTHSensorsHandler myThingHandler, @Reference ModbusMasterService modbusMasterService) {
 
-        this.modbusManager = modbusManager;
-        this.configProperties = configProperties;
+        this.myThingHandler = myThingHandler;
+        this.modbusMasterService = modbusMasterService;
 
         this.modbusSlaveEndpoint = new ModbusTCPSlaveEndpoint(host, port);
     }
 
     public ModbusSlaveEndpoint getSlaveEndpoint() {
         return this.modbusSlaveEndpoint;
+    }
+
+    public void initializePollers() {
+        logger.debug("ModbusMasterService initialize pollers() ");
+
+        // kita.getData().forEach((dataType, dataValue) -> {
+        // // todo
+        //
+        // RegisterTypeEnum register = dataType.register;
+        // int address = dataType.address;
+        //
+        // ModbusReadFunctionCode fnCode = this.convertToModbusReadFunctionCode(register);
+        // DataValuePoller poller = pollers.get(fnCode);
+        // if (poller == null) {
+        // int startAddress = address;
+        // int length = 1;
+        // poller = new DataValuePoller(this, fnCode, startAddress, length);
+        //
+        // } else {
+        // int startAddress = address;
+        // int oldEndAddress = poller.start + poller.length;
+        // int newEndAddress = startAddress + 1;
+        // if (startAddress < poller.start) {
+        // poller.start = startAddress;
+        // poller.length = oldEndAddress - startAddress;
+        // } else if (newEndAddress > oldEndAddress) {
+        // poller.length = newEndAddress - poller.start;
+        // }
+        //
+        // if (poller.length > 123) {
+        // throw new RuntimeException("poller.length troppo grande " + poller.length + " > 123 !");
+        // }
+        //
+        // }
+        // pollers.put(fnCode, poller);
+        // });
+
+        pollers.values().forEach((poller) -> {
+            if (poller != null) {
+                poller.registerPollTask();
+            }
+        });
+    }
+
+    // private ModbusReadFunctionCode convertToModbusReadFunctionCode(RegisterTypeEnum register) {
+    // switch (register) {
+    // case coil:
+    // return ModbusReadFunctionCode.READ_COILS;
+    // case holding:
+    // return ModbusReadFunctionCode.READ_INPUT_REGISTERS;
+    //
+    // default:
+    // throw new RuntimeException("RegisterTypeEnum unknown!");
+    // }
+    // }
+
+    public void dispose() {
+
+        pollers.values().forEach(poller -> {
+            if (poller != null) {
+                poller.unregisterPollTask();
+            }
+        });
+        pollers.clear();
+
     }
 
     public Map<ChannelUID, State> processUpdateStates(ModbusReadRequestBlueprint request,
@@ -146,70 +193,4 @@ public class ModbusMasterService {
     //
     // }
 
-    public ModbusOneTimeResponse performOneTimeRequest(int slaveUnitId, RegisterTypeEnum type, int start, int length) {
-
-        CountDownLatch callbackCalled = new CountDownLatch(1);
-
-        BasicModbusReadRequestBlueprint request = new BasicModbusReadRequestBlueprint(slaveUnitId,
-                this.convertToModbusReadFunctionCode(type), start, length, maxTries);
-
-        final ModbusOneTimeResponse ret = new ModbusOneTimeResponse();
-
-        PollTask task = new BasicPollTaskImpl(this.modbusSlaveEndpoint, request, new ModbusReadCallback() {
-
-            @Override
-            public void onRegisters(ModbusReadRequestBlueprint request, ModbusRegisterArray registers) {
-                // TODO Auto-generated method stub
-                logger.debug(registers.toHexString());
-                ret.registers = registers;
-                callbackCalled.countDown();
-            }
-
-            @Override
-            public void onError(ModbusReadRequestBlueprint request, Exception error) {
-                // TODO Auto-generated method stub
-                logger.debug(error.toString());
-                ret.error = error;
-                callbackCalled.countDown();
-            }
-
-            @Override
-            public void onBits(ModbusReadRequestBlueprint request, BitArray bits) {
-                // TODO Auto-generated method stub
-                logger.debug(bits.toBinaryString());
-                ret.bitsarray = bits;
-                callbackCalled.countDown();
-            }
-        });
-
-        Future<?> f = this.modbusManager.submitOneTimePoll(task);
-
-        try {
-            callbackCalled.await(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        // f.
-        return ret;
-
-    }
-
-    public ModbusManager getModbusManager() {
-
-        return this.modbusManager;
-    }
-
-    private ModbusReadFunctionCode convertToModbusReadFunctionCode(RegisterTypeEnum register) {
-        switch (register) {
-            case coil:
-                return ModbusReadFunctionCode.READ_COILS;
-            case holding:
-                return ModbusReadFunctionCode.READ_INPUT_REGISTERS;
-
-            default:
-                throw new RuntimeException("RegisterTypeEnum unknown!");
-        }
-    }
 }

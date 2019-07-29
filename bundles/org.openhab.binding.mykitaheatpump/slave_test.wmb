@@ -5,7 +5,7 @@
   <LOGTOFILE>1</LOGTOFILE>
  </MISC>
  <MODBUS>
-  <MODBUSADDRESS>0</MODBUSADDRESS>
+  <MODBUSADDRESS>1</MODBUSADDRESS>
   <PROTOCOL>0</PROTOCOL>
   <ADDRESSMAP>
    <ENTRY>
@@ -29,14 +29,24 @@
     <NAME>contact</NAME>
    </ENTRY>
    <ENTRY>
+    <ADDR>3005</ADDR>
+    <VALUE>0</VALUE>
+    <NAME/>
+   </ENTRY>
+   <ENTRY>
     <ADDR>30000</ADDR>
     <VALUE>0</VALUE>
     <NAME/>
    </ENTRY>
    <ENTRY>
     <ADDR>30001</ADDR>
-    <VALUE>0</VALUE>
+    <VALUE>1</VALUE>
     <NAME/>
+   </ENTRY>
+   <ENTRY>
+    <ADDR>30002</ADDR>
+    <VALUE>111</VALUE>
+    <NAME>test discovery (1)</NAME>
    </ENTRY>
    <ENTRY>
     <ADDR>30051</ADDR>

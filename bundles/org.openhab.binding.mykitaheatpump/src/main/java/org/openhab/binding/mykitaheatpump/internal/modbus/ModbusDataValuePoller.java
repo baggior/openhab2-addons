@@ -11,12 +11,12 @@ import org.openhab.io.transport.modbus.PollTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class DataValuePoller {
+class ModbusDataValuePoller {
 
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     final @NonNull MyKitaHeatPumpThingHandler myThingHandler;
-    final @NonNull ModbusMasterService modbusMasterService;
+    // final @NonNull ModbusPollers modbusMasterService;
 
     private final @NonNull ModbusReadFunctionCode functionCode;
 
@@ -27,32 +27,29 @@ class DataValuePoller {
 
     private @Nullable PollTask pollTask;
 
-    volatile boolean disposed;
-
     // private volatile List<ModbusReadCallback> childCallbacks = new CopyOnWriteArrayList<>();
 
     private final ReadCallback callback;
 
-    DataValuePoller(ModbusMasterService modbusMasterService, @NonNull ModbusReadFunctionCode functionCode, int start,
-            int length) {
+    ModbusDataValuePoller(ModbusPollers modbusPollers, @NonNull ModbusReadFunctionCode functionCode, int start, int length) {
 
-        this.modbusMasterService = modbusMasterService;
-        this.myThingHandler = modbusMasterService.myThingHandler;
+        // this.modbusMasterService = modbusMasterService;
+        this.myThingHandler = modbusPollers.myThingHandler;
 
-        this.callback = new ReadCallback(this);
+        this.callback = new ReadCallback(modbusPollers);
 
         this.functionCode = functionCode;
 
         this.start = start;
         this.length = length;
 
-        this.disposed = false;
+        this.callback.disposed = false;
     }
 
     synchronized void unregisterPollTask() {
         logger.trace("unregisterPollTask()");
         // Mark handler as disposed as soon as possible to halt processing of callbacks
-        disposed = true;
+        this.callback.disposed = true;
         if (pollTask == null) {
             return;
         } else {

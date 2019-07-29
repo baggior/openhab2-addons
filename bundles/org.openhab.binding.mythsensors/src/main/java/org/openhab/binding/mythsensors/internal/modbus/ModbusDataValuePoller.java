@@ -11,11 +11,12 @@ import org.openhab.io.transport.modbus.PollTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class DataValuePoller {
+class ModbusDataValuePoller {
 
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     final @NonNull MyTHSensorsHandler myThingHandler;
+    final @NonNull ModbusPollers modbusPollers;
     final @NonNull ModbusMasterService modbusMasterService;
 
     private final @NonNull ModbusReadFunctionCode functionCode;
@@ -31,18 +32,21 @@ class DataValuePoller {
 
     private final ReadCallback callback;
 
-    DataValuePoller(ModbusMasterService modbusMasterService, @NonNull ModbusReadFunctionCode functionCode, int start,
+    ModbusDataValuePoller(ModbusPollers modbusPollers, @NonNull ModbusReadFunctionCode functionCode, int start,
             int length) {
 
-        this.modbusMasterService = modbusMasterService;
-        this.myThingHandler = modbusMasterService.myThingHandler;
+        this.modbusPollers = modbusPollers;
+        this.modbusMasterService = modbusPollers.modbusMasterService;
+        this.myThingHandler = modbusPollers.myThingHandler;
 
-        this.callback = modbusMasterService.getReadCallback();
+        this.callback = new ReadCallback(modbusPollers);
 
         this.functionCode = functionCode;
 
         this.start = start;
         this.length = length;
+
+        this.callback.disposed = false;
     }
 
     synchronized void unregisterPollTask() {
@@ -101,7 +105,7 @@ class DataValuePoller {
         }
 
         BasicModbusReadRequestBlueprint request = new BasicModbusReadRequestBlueprint(config.unitId, this.functionCode,
-                this.start, this.length, modbusMasterService.maxTries);
+                this.start, this.length, modbusPollers.maxTries);
 
         @NonNull
         PollTask task = new BasicPollTaskImpl(modbusMasterService.getSlaveEndpoint(), request, this.callback);

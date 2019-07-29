@@ -28,7 +28,7 @@ import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.State;
-import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusMasterService;
+import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusPollers;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 import org.openhab.io.transport.modbus.ModbusManager;
 import org.openhab.io.transport.modbus.ModbusManagerListener;
@@ -59,7 +59,7 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
     // @Nullable
     // volatile DataValuePoller poller;
 
-    final ModbusMasterService modbusMasterService;
+    final ModbusPollers modbusMasterService;
     final KitaHeatPump kita;
     final ChannelsHandler channelsHandler;
 
@@ -67,7 +67,7 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
         super(thing);
         this.managerRef = managerRef;
         this.kita = new KitaHeatPump();
-        this.modbusMasterService = new ModbusMasterService(kita, this);
+        this.modbusMasterService = new ModbusPollers(kita, this);
         this.channelsHandler = new ChannelsHandler(this);
     }
 

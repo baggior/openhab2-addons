@@ -36,7 +36,7 @@ class ReadCallback implements ModbusReadCallback {
      */
     // private final DataValuePoller dataValuePoller;
     // private final ChannelsHandler channelsHandler;
-    private final ModbusMasterService modbusService;
+    private final ModbusPollers modbusPollers;
     boolean disposed = false;
 
     private @Nullable AtomicStampedKeyValue<ModbusReadRequestBlueprint, ModbusRegisterArray> lastRegisters;
@@ -46,20 +46,20 @@ class ReadCallback implements ModbusReadCallback {
     /**
      * @param dataValuePoller
      */
-    ReadCallback(ModbusMasterService modbusService) {
+    ReadCallback(ModbusPollers modbusPollers) {
 
-        this.modbusService = modbusService;
+        this.modbusPollers = modbusPollers;
         // this.channelsHandler = dataValuePoller.myThingHandler.getChannelsHandler();
     }
 
     @Override
     public void onRegisters(ModbusReadRequestBlueprint request, ModbusRegisterArray registers) {
         // Ignore all incoming data and errors if configuration is not correct
-        if (this.modbusService.myThingHandler.hasConfigurationError() || this.disposed) {
+        if (this.modbusPollers.myThingHandler.hasConfigurationError() || this.disposed) {
             return;
         }
 
-        if (modbusService.cacheMillis >= 0) {
+        if (modbusPollers.cacheMillis >= 0) {
             AtomicStampedKeyValue<ModbusReadRequestBlueprint, ModbusRegisterArray> lastRegisters = this.lastRegisters;
             if (lastRegisters == null) {
                 this.lastRegisters = new AtomicStampedKeyValue<>(System.currentTimeMillis(), request, registers);
@@ -71,7 +71,7 @@ class ReadCallback implements ModbusReadCallback {
         resetCommunicationError();
         // childCallbacks.forEach(handler -> handler.onRegisters(request, registers));
 
-        Map<ChannelUID, State> channelStates = this.modbusService.processUpdateStates(request, registers);
+        Map<ChannelUID, State> channelStates = this.modbusPollers.processUpdateStates(request, registers);
 
         // this.channelsHandler.updateExpiredChannels(channelStates);
 
@@ -80,11 +80,11 @@ class ReadCallback implements ModbusReadCallback {
     @Override
     public void onBits(ModbusReadRequestBlueprint request, BitArray coils) {
         // Ignore all incoming data and errors if configuration is not correct
-        if (this.modbusService.myThingHandler.hasConfigurationError() || this.disposed) {
+        if (this.modbusPollers.myThingHandler.hasConfigurationError() || this.disposed) {
             return;
         }
 
-        if (modbusService.cacheMillis >= 0) {
+        if (this.modbusPollers.cacheMillis >= 0) {
             AtomicStampedKeyValue<ModbusReadRequestBlueprint, BitArray> lastCoils = this.lastCoils;
             if (lastCoils == null) {
                 this.lastCoils = new AtomicStampedKeyValue<>(System.currentTimeMillis(), request, coils);
@@ -96,7 +96,7 @@ class ReadCallback implements ModbusReadCallback {
         resetCommunicationError();
         // childCallbacks.forEach(handler -> handler.onBits(request, coils));
 
-        Map<ChannelUID, State> channelStates = this.modbusService.processUpdateStates(request, coils);
+        Map<ChannelUID, State> channelStates = this.modbusPollers.processUpdateStates(request, coils);
 
         // this.channelsHandler.updateExpiredChannels(channelStates);
     }
@@ -105,11 +105,11 @@ class ReadCallback implements ModbusReadCallback {
     public void onError(ModbusReadRequestBlueprint request, Exception error) {
 
         // Ignore all incoming data and errors if configuration is not correct
-        if (this.modbusService.myThingHandler.hasConfigurationError() || this.disposed) {
+        if (this.modbusPollers.myThingHandler.hasConfigurationError() || this.disposed) {
             return;
         }
 
-        if (modbusService.cacheMillis >= 0) {
+        if (this.modbusPollers.cacheMillis >= 0) {
             AtomicStampedKeyValue<ModbusReadRequestBlueprint, Exception> lastError = this.lastError;
             if (lastError == null) {
                 this.lastError = new AtomicStampedKeyValue<>(System.currentTimeMillis(), request, error);
@@ -126,7 +126,7 @@ class ReadCallback implements ModbusReadCallback {
     }
 
     private void resetCommunicationError() {
-        ThingStatusInfo statusInfo = this.modbusService.myThingHandler.getThing().getStatusInfo();
+        ThingStatusInfo statusInfo = this.modbusPollers.myThingHandler.getThing().getStatusInfo();
         if (ThingStatus.OFFLINE.equals(statusInfo.getStatus())
                 && ThingStatusDetail.COMMUNICATION_ERROR.equals(statusInfo.getStatusDetail())) {
             // this.dataValuePoller.myThingHandler.updateThingStatus(ThingStatus.ONLINE, null, null);
@@ -134,7 +134,7 @@ class ReadCallback implements ModbusReadCallback {
     }
 
     private ThingUID getThingUID() {
-        return this.modbusService.myThingHandler.getThing().getUID();
+        return this.modbusPollers.myThingHandler.getThing().getUID();
     }
 
     @Override

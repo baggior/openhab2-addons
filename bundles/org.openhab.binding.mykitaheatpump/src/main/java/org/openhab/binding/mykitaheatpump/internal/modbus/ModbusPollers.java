@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @NonNullByDefault
-public class ModbusMasterService {
+public class ModbusPollers {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -33,9 +33,9 @@ public class ModbusMasterService {
     final MyKitaHeatPumpThingHandler myThingHandler;
 
     // final List<DataValuePoller> pollers = new ArrayList<DataValuePoller>();
-    final Map<ModbusReadFunctionCode, @Nullable DataValuePoller> pollers = new HashMap<ModbusReadFunctionCode, @Nullable DataValuePoller>();
+    final Map<ModbusReadFunctionCode, @Nullable ModbusDataValuePoller> pollers = new HashMap<ModbusReadFunctionCode, @Nullable ModbusDataValuePoller>();
 
-    public ModbusMasterService(KitaHeatPump kita, MyKitaHeatPumpThingHandler myThingHandler) {
+    public ModbusPollers(KitaHeatPump kita, MyKitaHeatPumpThingHandler myThingHandler) {
 
         this.kita = kita;
         this.myThingHandler = myThingHandler;
@@ -51,11 +51,11 @@ public class ModbusMasterService {
             int address = dataType.address;
 
             ModbusReadFunctionCode fnCode = this.convertToModbusReadFunctionCode(register);
-            DataValuePoller poller = pollers.get(fnCode);
+            ModbusDataValuePoller poller = pollers.get(fnCode);
             if (poller == null) {
                 int startAddress = address;
                 int length = 1;
-                poller = new DataValuePoller(this, fnCode, startAddress, length);
+                poller = new ModbusDataValuePoller(this, fnCode, startAddress, length);
 
             } else {
                 int startAddress = address;
@@ -135,6 +135,7 @@ public class ModbusMasterService {
 
         });
 
+        this.myThingHandler.getChannelsHandler().updateExpiredChannels(ret);
         return ret;
     }
 
@@ -161,6 +162,8 @@ public class ModbusMasterService {
             ret.put(channelUID, numericState);
 
         });
+
+        this.myThingHandler.getChannelsHandler().updateExpiredChannels(ret);
 
         return ret;
     }
