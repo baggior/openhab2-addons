@@ -59,7 +59,7 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
     // @Nullable
     // volatile DataValuePoller poller;
 
-    final ModbusPollers modbusMasterService;
+    final ModbusPollers modbusPollers;
     final KitaHeatPump kita;
     final ChannelsHandler channelsHandler;
 
@@ -67,7 +67,7 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
         super(thing);
         this.managerRef = managerRef;
         this.kita = new KitaHeatPump();
-        this.modbusMasterService = new ModbusPollers(kita, this);
+        this.modbusPollers = new ModbusPollers(kita, this);
         this.channelsHandler = new ChannelsHandler(this);
     }
 
@@ -137,7 +137,7 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
             managerRef.get().addListener(this);
             managerRef.get().setEndpointPoolConfiguration(endpoint, poolConfiguration);
 
-            modbusMasterService.initializePollers();
+            modbusPollers.initializePollers();
 
             updateStatus(ThingStatus.ONLINE);
         } catch (ModbusConfigurationException e) {
@@ -251,7 +251,7 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
         // }
         // this.callbackDelegator.resetCache();
 
-        this.modbusMasterService.dispose();
+        this.modbusPollers.dispose();
         this.channelsHandler.dispose();
 
         updateStatus(ThingStatus.OFFLINE);

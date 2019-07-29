@@ -15,8 +15,7 @@ import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.openhab.binding.mythsensors.internal.modbus.ModbusMasterService;
-import org.openhab.binding.mythsensors.internal.modbus.ModbusMasterService.ModbusOneTimeResponse;
-import org.openhab.binding.mythsensors.internal.modbus.ModbusMasterService.RegisterTypeEnum;
+import org.openhab.binding.mythsensors.internal.models.ThSensor;
 import org.openhab.io.transport.modbus.ModbusManager;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -59,12 +58,13 @@ public class MyTHSensorsDiscoveryService extends AbstractDiscoveryService {
 
             for (int guess_unitId = minId; guess_unitId <= maxId; guess_unitId++) {
 
-                ModbusOneTimeResponse resp = svc.performOneTimeRequest(guess_unitId, RegisterTypeEnum.holding, 1, 1);
-                if (resp.error == null && resp.registers != null) {
-                    int value_read = resp.registers.getRegister(0).getValue();
+                ThSensor thsensor = svc.performOneTimeThSensorRequest(guess_unitId);
+                // svc.performOneTimeRequest(guess_unitId, RegisterTypeEnum.holding, 1, 1);
+                if (thsensor != null) {
+                    int value_read = thsensor.temperature;
                     if (value_read > 0) {
 
-                        // TODO: found
+                        // found
                         final String thingIdStr = String.valueOf(guess_unitId);
 
                         ThingUID thingUID = new ThingUID(THING_TYPE_THSENSOR, thingIdStr);
@@ -93,6 +93,7 @@ public class MyTHSensorsDiscoveryService extends AbstractDiscoveryService {
             this.port = Integer.decode((String) configProperties.get("port"));
             this.minId = Integer.decode((String) configProperties.get("minUnitIdToScan"));
             this.maxId = Integer.decode((String) configProperties.get("maxUnitIdToScan"));
+
             logger.debug("MyTHSensorsDiscoveryService.activate host: {}:{}, id to scan {} - {}", host, port, minId,
                     maxId);
         }

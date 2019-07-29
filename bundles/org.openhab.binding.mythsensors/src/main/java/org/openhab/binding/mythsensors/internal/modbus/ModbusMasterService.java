@@ -1,5 +1,6 @@
 package org.openhab.binding.mythsensors.internal.modbus;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -10,6 +11,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.types.State;
+import org.openhab.binding.mythsensors.internal.models.ThSensor;
 import org.openhab.io.transport.modbus.BasicModbusReadRequestBlueprint;
 import org.openhab.io.transport.modbus.BasicPollTaskImpl;
 import org.openhab.io.transport.modbus.BitArray;
@@ -56,10 +58,12 @@ public class ModbusMasterService {
 
     Map<String, @Nullable Object> configProperties;
 
+    private Integer timeoutSec = 1;
+
     public ModbusMasterService(ModbusManager modbusManager, Map<String, @Nullable Object> configProperties) {
 
         this.modbusManager = modbusManager;
-        this.configProperties = configProperties;
+        this.configProperties = Collections.unmodifiableMap(new HashMap<>(configProperties));
 
         this.modbusSlaveEndpoint = new ModbusTCPSlaveEndpoint(host, port);
     }
@@ -146,7 +150,9 @@ public class ModbusMasterService {
     //
     // }
 
-    public ModbusOneTimeResponse performOneTimeRequest(int slaveUnitId, RegisterTypeEnum type, int start, int length) {
+    ModbusOneTimeResponse performOneTimeRequest(int slaveUnitId, RegisterTypeEnum type, int start, int length) {
+
+        this.timeoutSec = Integer.decode((String) configProperties.get("timeoutSec"));
 
         CountDownLatch callbackCalled = new CountDownLatch(1);
 
@@ -185,15 +191,29 @@ public class ModbusMasterService {
         Future<?> f = this.modbusManager.submitOneTimePoll(task);
 
         try {
-            callbackCalled.await(5, TimeUnit.SECONDS);
+            callbackCalled.await(timeoutSec, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            ret.error = e;
         }
 
-        // f.
         return ret;
 
+    }
+
+    public @Nullable ThSensor performOneTimeThSensorRequest(int unitId) {
+
+        ModbusOneTimeResponse response = this.performOneTimeRequest(unitId, RegisterTypeEnum.holding, 200, 5);
+
+        if (response.registers != null) {
+            ThSensor thsensor = new ThSensor();
+            thsensor.moisture = response.registers.getRegister(0).getValue();
+            thsensor.temperature = response.registers.getRegister(3).getValue();
+            thsensor.dewpoint = response.registers.getRegister(4).getValue();
+            return thsensor;
+        } else if (response.error != null) {
+            logger.debug(response.error.getLocalizedMessage());
+        }
+        return null;
     }
 
     public ModbusManager getModbusManager() {

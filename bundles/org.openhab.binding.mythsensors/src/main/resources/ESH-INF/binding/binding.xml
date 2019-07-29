@@ -44,6 +44,12 @@
            <default>16</default>           
            <required>true</required>           
        </parameter>
+       <parameter name="timeoutSec" type="integer" min="1" max="20" groupName="modbus">
+           <label>Timeout in seconds for discovery each unit identifier</label>
+           <description>How much time to wait for each unit identifier</description>
+           <default>1</default>           
+           <required>true</required>           
+       </parameter>
 
       
 	</config-description>
