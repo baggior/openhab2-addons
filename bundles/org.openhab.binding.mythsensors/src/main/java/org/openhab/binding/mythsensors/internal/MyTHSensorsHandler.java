@@ -19,9 +19,14 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.ThingStatusDetail;
+import org.eclipse.smarthome.core.thing.ThingStatusInfo;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.openhab.binding.mythsensors.internal.modbus.ModbusMasterService;
+import org.openhab.binding.mythsensors.internal.modbus.ModbusPollers;
+import org.openhab.io.transport.modbus.ModbusManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +42,15 @@ public class MyTHSensorsHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(MyTHSensorsHandler.class);
 
     private @Nullable MyTHSensorsConfiguration config;
+    private @Nullable ModbusMasterService modbusMasterService;
+    private @Nullable ModbusPollers modbusPollers;
 
-    public MyTHSensorsHandler(Thing thing) {
+    private final ModbusManager manager;
+
+    public MyTHSensorsHandler(Thing thing, ModbusManager manager) {
         super(thing);
+        this.manager = manager;
+
     }
 
     @Override
@@ -60,46 +71,46 @@ public class MyTHSensorsHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
-        // logger.debug("Start initializing!");
-        config = getConfigAs(MyTHSensorsConfiguration.class);
 
-        // TODO: Initialize the handler.
-        // The framework requires you to return from this method quickly. Also, before leaving this method a thing
-        // status from one of ONLINE, OFFLINE or UNKNOWN must be set. This might already be the real thing status in
-        // case you can decide it directly.
-        // In case you can not decide the thing status directly (e.g. for long running connection handshake using WAN
-        // access or similar) you should set status UNKNOWN here and then decide the real status asynchronously in the
-        // background.
+        logger.trace("Initializing {} from status {}", this.getThing().getUID(), this.getThing().getStatus());
+        if (this.getThing().getStatus().equals(ThingStatus.ONLINE)) {
+            // If was online then first change it to offline.
+            // this ensures that children will be notified about the change
+            updateStatus(ThingStatus.OFFLINE);
+        }
+        try {
+            config = getConfigAs(MyTHSensorsConfiguration.class);
+            modbusMasterService = new ModbusMasterService(this.manager, this.getConfig().getProperties());
+            modbusPollers = new ModbusPollers(this, modbusMasterService);
 
-        // set the thing status to UNKNOWN temporarily and let the background task decide for the real status.
-        // the framework is then able to reuse the resources from the thing handler initialization.
-        // we set this upfront to reliably check status updates in unit tests.
-        updateStatus(ThingStatus.UNKNOWN);
-
-        // // Example for background initialization:
-        // scheduler.execute(() -> {
-        // boolean thingReachable = true; // <background task with long running initialization here>
-        // // when done do:
-        // if (thingReachable) {
-        // updateStatus(ThingStatus.ONLINE);
-        // } else {
-        // updateStatus(ThingStatus.OFFLINE);
-        // }
-        // });
-
-        // logger.debug("Finished initializing!");
-
-        // Note: When initialization can NOT be done set the status with more details for further
-        // analysis. See also class ThingStatusDetail for all available status details.
-        // Add a description to give user information to understand why thing does not work as expected. E.g.
-        // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-        // "Can not access device as username and/or password are invalid");
+            updateStatus(ThingStatus.ONLINE);
+        } catch (Exception e) {
+            logger.debug("Exception during initialization", e);
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, String
+                    .format("Exception during initialization: %s (%s)", e.getMessage(), e.getClass().getSimpleName()));
+        } finally {
+            logger.trace("initialize() of thing {} '{}' finished", thing.getUID(), thing.getLabel());
+        }
 
     }
 
     public boolean hasConfigurationError() {
-        // TODO Auto-generated method stub
-        return false;
+        ThingStatusInfo statusInfo = getThing().getStatusInfo();
+        return statusInfo.getStatus() == ThingStatus.OFFLINE
+                && statusInfo.getStatusDetail() == ThingStatusDetail.CONFIGURATION_ERROR;
     }
 
+    @Override
+    public synchronized void dispose() {
+        logger.debug("dispose()");
+        // if (this.poller != null) {
+        // this.poller.unregisterPollTask();
+        // }
+        // this.callbackDelegator.resetCache();
+
+        // this.modbusPollers.dispose();
+        // this.channelsHandler.dispose();
+
+        updateStatus(ThingStatus.OFFLINE);
+    }
 }

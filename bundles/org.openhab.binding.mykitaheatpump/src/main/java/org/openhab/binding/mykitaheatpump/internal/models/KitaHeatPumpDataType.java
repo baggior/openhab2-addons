@@ -14,8 +14,11 @@ public class KitaHeatPumpDataType {
     }
 
     public static enum RegisterTypeEnum {
-        coil,
-        holding
+        coil, // 01 read coil
+        discrete_input, // 02 read discrete input
+        holding, // 03 read holding registers
+        input, // 04 read input registers
+
     }
 
     public DataTypeEnum type;

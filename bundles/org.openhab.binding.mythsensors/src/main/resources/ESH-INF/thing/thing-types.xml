@@ -14,7 +14,7 @@
 		</channels>
 
 		<config-description>
-			<parameter name="unitId" type="integer" required="true" readOnly="true">
+			<parameter name="unitId" type="integer" required="true" min="1" max="255">
 				<label>Modbus Unit identifier</label>
 				<description>Modbus Unit identifier</description>
 			</parameter>

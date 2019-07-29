@@ -87,7 +87,11 @@ public class ModbusPollers {
         switch (register) {
             case coil:
                 return ModbusReadFunctionCode.READ_COILS;
+            case discrete_input:
+                return ModbusReadFunctionCode.READ_INPUT_DISCRETES;
             case holding:
+                return ModbusReadFunctionCode.READ_MULTIPLE_REGISTERS;
+            case input:
                 return ModbusReadFunctionCode.READ_INPUT_REGISTERS;
 
             default:

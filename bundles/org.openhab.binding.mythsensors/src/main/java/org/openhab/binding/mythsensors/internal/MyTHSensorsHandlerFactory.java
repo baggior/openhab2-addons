@@ -26,6 +26,7 @@ import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
 import org.openhab.binding.mythsensors.internal.discovery.MyTHSensorsDiscoveryService;
+import org.openhab.io.transport.modbus.ModbusManager;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -48,6 +49,7 @@ public class MyTHSensorsHandlerFactory extends BaseThingHandlerFactory {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private @Nullable MyTHSensorsDiscoveryService discovery;
+    private @Nullable ModbusManager manager;
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -58,8 +60,8 @@ public class MyTHSensorsHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (THING_TYPE_THSENSOR.equals(thingTypeUID)) {
-            return new MyTHSensorsHandler(thing);
+        if (THING_TYPE_THSENSOR.equals(thingTypeUID) && manager != null) {
+            return new MyTHSensorsHandler(thing, manager);
         }
 
         return null;
@@ -86,5 +88,15 @@ public class MyTHSensorsHandlerFactory extends BaseThingHandlerFactory {
 
     protected void unbindDiscovery(MyTHSensorsDiscoveryService discovery) {
         this.discovery = null;
+    }
+
+    @Reference
+    public void setModbusManager(ModbusManager manager) {
+        logger.debug("Setting ModbusManager: {}", manager);
+        this.manager = manager;
+    }
+
+    public void unsetModbusManager(ModbusManager manager) {
+        this.manager = null;
     }
 }
