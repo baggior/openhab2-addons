@@ -6,6 +6,7 @@ import java.util.Map;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
+import org.eclipse.smarthome.core.thing.type.ChannelTypeUID;
 import org.eclipse.smarthome.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ public class ChannelsHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private Map<String, ChannelUID> channelCache = new HashMap<>();
+    private Map<String, ChannelTypeUID> channelTypeCache = new HashMap<>();
     private Map<ChannelUID, State> channelLastState = new HashMap<>();
     private Map<ChannelUID, Long> channelLastUpdated = new HashMap<>();
     private long updateUnchangedValuesEveryMillis;
@@ -36,6 +38,11 @@ public class ChannelsHandler {
 
     public ChannelUID getChannelUID(String channelID) {
         return channelCache.computeIfAbsent(channelID, id -> new ChannelUID(thingHandler.getUID(), id));
+    }
+
+    public ChannelTypeUID getChannelTypeUID(String channelTypeID) {
+        return channelTypeCache.computeIfAbsent(channelTypeID,
+                id -> new ChannelTypeUID(MyKitaHeatPumpBindingConstants.BINDING_ID, id));
     }
 
     public void updateExpiredChannels(Map<ChannelUID, State> states) {

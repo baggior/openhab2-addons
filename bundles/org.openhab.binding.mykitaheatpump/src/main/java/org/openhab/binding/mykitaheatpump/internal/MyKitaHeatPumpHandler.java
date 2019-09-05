@@ -73,6 +73,8 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
+
+        logger.debug("handleCommand {} {}", channelUID.toString(), command.toFullString());
         /*
          * if (CHANNEL_1.equals(channelUID.getId())) {
          * if (command instanceof RefreshType) {
@@ -87,6 +89,7 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
          * // "Could not control device at IP address x.x.x.x");
          * }
          */
+        this.updateStatus(ThingStatus.ONLINE);
     }
 
     private void configure() throws ModbusConfigurationException {

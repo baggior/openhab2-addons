@@ -181,11 +181,16 @@ public class ModbusPollers {
             case dateTime:
                 return ValueType.INT16;
             case number:
+            case pct:
+            case cop:
+            case flow_ro:
+            case temperature_ro:
+            case temperature_rw:
                 return ValueType.INT16;
             case string:
                 throw new RuntimeException("invalid DataTypeEnum string!");
             default:
-                throw new RuntimeException("DataTypeEnum unknown!");
+                throw new RuntimeException("DataTypeEnum unknown! -> " + type.toString());
 
         }
 

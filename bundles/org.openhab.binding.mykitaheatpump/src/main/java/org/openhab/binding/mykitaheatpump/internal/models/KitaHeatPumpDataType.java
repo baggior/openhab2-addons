@@ -9,6 +9,11 @@ public class KitaHeatPumpDataType {
         string,
         dateTime,
         number,
+        pct,
+        cop,
+        temperature_ro,
+        temperature_rw,
+        flow_ro,
         _bool,
         _switch
     }
@@ -25,7 +30,7 @@ public class KitaHeatPumpDataType {
     public boolean readonly;
 
     public String name;
-    public String description;
+    public String label;
 
     public RegisterTypeEnum register;
     public int address;
@@ -34,13 +39,12 @@ public class KitaHeatPumpDataType {
         this(name, name, DataTypeEnum.number, address, RegisterTypeEnum.holding);
     }
 
-    KitaHeatPumpDataType(String name, String description, DataTypeEnum datatype, int address,
-            RegisterTypeEnum registerType) {
+    KitaHeatPumpDataType(String name, String label, DataTypeEnum datatype, int address, RegisterTypeEnum registerType) {
         readonly = false;
 
         type = datatype;
         this.name = name;
-        this.description = description;
+        this.label = label;
         this.register = registerType;
         this.address = address;
     }
