@@ -9,6 +9,11 @@ public class KitaHeatPumpDataType {
         string,
         dateTime,
         number,
+        pct,
+        cop,
+        temperature_ro,
+        temperature_rw,
+        flow_ro,
         _bool,
         _switch
     }

@@ -24,7 +24,7 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class MyKitaHeatPumpBindingConstants {
 
-    private static final String BINDING_ID = "mykitaheatpump";
+    static final String BINDING_ID = "mykitaheatpump";
 
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_KITA_REGISTERS = new ThingTypeUID(BINDING_ID, "kita");

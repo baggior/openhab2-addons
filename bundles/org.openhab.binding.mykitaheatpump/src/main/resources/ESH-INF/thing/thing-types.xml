@@ -8,7 +8,20 @@
 	<thing-type id="kita">
 		<label>MyKitaHeatPump Binding Thing: REGISTERS</label>
 		<description>Sample thing for MyKitaHeatPump Binding</description>
+		<category>HVAC</category>
 
+        <!-- CHANNELS -->
+<!--         <channels> -->
+<!--           <channel typeId="temperature-ro-ctype" id="b1"> -->
+<!--             <label>B1: subcooling temperature in HP mode [°C]</label> -->
+<!--           </channel> -->
+<!--           <channel typeId="temperature-ro-ctype" id="b3"> -->
+<!--             <label>B3: sanitary hot water puffer temperature [°C]</label> -->
+<!--           </channel> -->
+<!--           <channel typeId="temperature-ro-ctype" id="b4"> -->
+<!--             <label>B4: inlet water temperature [°C]</label> -->
+<!--           </channel>           -->
+<!--         </channels> -->
 		
 		<config-description>
 			<parameter name="host" type="text" required="true">
@@ -102,15 +115,52 @@
             
             
 		</config-description>
+		
+
 
 	</thing-type>
 	
 	
 	<!-- Sample Channel Type -->
 	<channel-type id="sample-channel">
-		<item-type>mykitaheatpumpItem</item-type>
+		<item-type>Number</item-type>
 		<label>MyKitaHeatPump Binding Channel</label>
 		<description>Sample channel for MyKitaHeatPump Binding</description>
 	</channel-type>
-
+	
+	<channel-type id="temperature-ro-ctype">
+        <item-type>Number:Temperature</item-type>
+        <kind>state</kind>
+        <label>Temperature</label>                
+        <category>Temperature</category>
+        <state readOnly="true" pattern="%.2f %unit%" />
+    </channel-type>
+    <channel-type id="temperature-rw-ctype">
+        <item-type>Number:Temperature</item-type>
+        <kind>state</kind>
+        <label>Temperature Set</label>                
+        <category>Heating</category>
+        <state readOnly="false" pattern="%.2f %unit%" min="7" max="60" step="0.1" />
+    </channel-type>
+	<channel-type id="flow-ro-ctype">
+	   <item-type>Number:VolumetricFlowRate</item-type>
+        <kind>state</kind>
+        <label>Water Flow</label>                
+        <category>Flow</category>
+        <state readOnly="true" pattern="%.2f %unit%" />
+	</channel-type>
+	<channel-type id="pct-ctype">
+       <item-type>Number:Dimensionless</item-type>
+        <kind>state</kind>
+        <label>Percent</label>                      
+        <state readOnly="true" pattern="%.0f %%" />
+    </channel-type>
+    <channel-type id="cop-ctype">
+       <item-type>Number:Dimensionless</item-type>
+        <kind>state</kind>
+        <label>COP</label>                      
+        <category>qualityofservice</category>
+        <state readOnly="true" pattern="%.2f" />
+    </channel-type>
+    
 </thing:thing-descriptions>

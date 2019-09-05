@@ -8,6 +8,7 @@
 	<thing-type id="thsensor">
 		<label>THSensors Thing</label>
 		<description>Eurotherm THSensors Thing</description>
+		<category>Sensor</category>
 
 		<channels>
 			<channel id="channel1" typeId="sample-channel" />
