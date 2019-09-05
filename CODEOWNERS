@@ -112,9 +112,11 @@
 /bundles/org.openhab.binding.nuki/ @mkatter
 /bundles/org.openhab.binding.oceanic/ @kgoderis
 /bundles/org.openhab.binding.onebusaway/ @sdwilsh
+/bundles/org.openhab.binding.omnikinverter/ @hansbogert
 /bundles/org.openhab.binding.onewiregpio/ @aogorek
 /bundles/org.openhab.binding.onewire/ @J-N-K
 /bundles/org.openhab.binding.onkyo/ @pail23 @paulianttila
+/bundles/org.openhab.binding.opengarage/ @psmedley
 /bundles/org.openhab.binding.opensprinkler/ @CrackerStealth @FlorianSW
 /bundles/org.openhab.binding.openuv/ @clinique
 /bundles/org.openhab.binding.openweathermap/ @cweitkamp
@@ -132,6 +134,7 @@
 /bundles/org.openhab.binding.rfxcom/ @martinvw @paulianttila
 /bundles/org.openhab.binding.rme/ @kgoderis
 /bundles/org.openhab.binding.robonect/ @reyem
+/bundles/org.openhab.binding.rotel/ @lolodomo
 /bundles/org.openhab.binding.rotelra1x/ @fa2k
 /bundles/org.openhab.binding.russound/ @tmrobert8
 /bundles/org.openhab.binding.samsungtv/ @paulianttila

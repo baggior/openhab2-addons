@@ -136,6 +136,7 @@
     <module>org.openhab.binding.nanoleaf</module>
     <module>org.openhab.binding.neato</module>
     <module>org.openhab.binding.neeo</module>
+    <module>org.openhab.binding.neohub</module>
     <module>org.openhab.binding.nest</module>
     <module>org.openhab.binding.netatmo</module>
     <module>org.openhab.binding.network</module>
@@ -145,10 +146,12 @@
     <module>org.openhab.binding.ntp</module>
     <module>org.openhab.binding.nuki</module>
     <module>org.openhab.binding.oceanic</module>
+    <module>org.openhab.binding.omnikinverter</module>
     <module>org.openhab.binding.onebusaway</module>
     <module>org.openhab.binding.onewiregpio</module>
     <module>org.openhab.binding.onewire</module>
     <module>org.openhab.binding.onkyo</module>
+    <module>org.openhab.binding.opengarage</module>
     <module>org.openhab.binding.opensprinkler</module>
     <module>org.openhab.binding.openuv</module>
     <module>org.openhab.binding.openweathermap</module>
@@ -166,6 +169,7 @@
     <module>org.openhab.binding.rfxcom</module>
     <module>org.openhab.binding.rme</module>
     <module>org.openhab.binding.robonect</module>
+    <module>org.openhab.binding.rotel</module>
     <module>org.openhab.binding.rotelra1x</module>
     <module>org.openhab.binding.russound</module>
     <module>org.openhab.binding.samsungtv</module>
