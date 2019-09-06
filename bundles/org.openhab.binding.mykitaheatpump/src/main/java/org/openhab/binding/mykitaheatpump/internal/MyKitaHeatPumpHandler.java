@@ -27,11 +27,16 @@ import org.eclipse.smarthome.core.thing.ThingStatusInfo;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
+import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.types.State;
 import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusPollers;
+import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusWriter;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 import org.openhab.io.transport.modbus.ModbusManager;
 import org.openhab.io.transport.modbus.ModbusManagerListener;
+import org.openhab.io.transport.modbus.ModbusResponse;
+import org.openhab.io.transport.modbus.ModbusWriteCallback;
+import org.openhab.io.transport.modbus.ModbusWriteRequestBlueprint;
 import org.openhab.io.transport.modbus.endpoint.EndpointPoolConfiguration;
 import org.openhab.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
 import org.openhab.io.transport.modbus.endpoint.ModbusTCPSlaveEndpoint;
@@ -60,6 +65,7 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
     // volatile DataValuePoller poller;
 
     final ModbusPollers modbusPollers;
+    final ModbusWriter modbusWriter;
     final KitaHeatPump kita;
     final ChannelsHandler channelsHandler;
 
@@ -68,13 +74,14 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
         this.managerRef = managerRef;
         this.kita = new KitaHeatPump();
         this.modbusPollers = new ModbusPollers(kita, this);
+        this.modbusWriter = new ModbusWriter(kita, this);
         this.channelsHandler = new ChannelsHandler(this);
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
 
-        logger.debug("handleCommand {} {}", channelUID.toString(), command.toFullString());
+        logger.debug("handleCommand {} {}", channelUID, command);
         /*
          * if (CHANNEL_1.equals(channelUID.getId())) {
          * if (command instanceof RefreshType) {
@@ -89,8 +96,45 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
          * // "Could not control device at IP address x.x.x.x");
          * }
          */
-        this.updateStatus(ThingStatus.ONLINE);
+
+        if (command != null) {
+
+            if (command instanceof RefreshType) {
+                // TODO: handle data refresh
+
+                this.updateStatus(ThingStatus.ONLINE);
+            } else {
+                String id = channelUID.getId();
+
+                this.modbusWriter.writeData(id, command, new ModbusWriteCallback() {
+
+                    @Override
+                    public void onWriteResponse(ModbusWriteRequestBlueprint request, ModbusResponse response) {
+                        logger.trace("Write OK Request: {} \n\t Response: {}", request, response);
+                        // TODO Auto-generated method stub
+
+                        MyKitaHeatPumpHandler.this.updateStatus(ThingStatus.ONLINE);
+                    }
+
+                    @Override
+                    public void onError(ModbusWriteRequestBlueprint request, Exception error) {
+                        logger.error("Write FAILED Request: {} \n\t ERROR: {}", request, error);
+                        // TODO Auto-generated method stub
+
+                        MyKitaHeatPumpHandler.this.updateThingStatus(ThingStatus.OFFLINE,
+                                ThingStatusDetail.COMMUNICATION_ERROR,
+                                String.format("Error (%s) with read. Request: %s. Description: %s. Message: %s",
+                                        error.getClass().getSimpleName(), request, error.toString(),
+                                        error.getMessage()));
+                    }
+                });
+
+            }
+        }
+
     }
+
+    //////////////////////////////////////////////////////////////////////////////////////
 
     private void configure() throws ModbusConfigurationException {
         // logger.debug("Start initializing!");

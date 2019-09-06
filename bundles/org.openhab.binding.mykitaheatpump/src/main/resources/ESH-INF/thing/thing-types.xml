@@ -133,34 +133,34 @@
         <kind>state</kind>
         <label>Temperature</label>                
         <category>Temperature</category>
-        <state readOnly="true" pattern="%.2f %unit%" />
+        <state readOnly="true" pattern="%.1f %unit%" />
     </channel-type>
     <channel-type id="temperature-rw-ctype">
         <item-type>Number:Temperature</item-type>
         <kind>state</kind>
         <label>Temperature Set</label>                
         <category>Heating</category>
-        <state readOnly="false" pattern="%.2f %unit%" min="0" max="80" step="0.1" />
+        <state readOnly="false" pattern="%.1f %unit%" min="0" max="80" step="0.1" />
     </channel-type>
 	<channel-type id="flow-ro-ctype">
 	   <item-type>Number:VolumetricFlowRate</item-type>
         <kind>state</kind>
         <label>Water Flow</label>                
         <category>Flow</category>
-        <state readOnly="true" pattern="%.2f l/m" />
+        <state readOnly="true" pattern="%.1f l/m" />
 	</channel-type>
 	<channel-type id="pct-ctype">
        <item-type>Number:Dimensionless</item-type>
         <kind>state</kind>
         <label>Percent</label>                      
-        <state readOnly="true" pattern="%.2f %%" />
+        <state readOnly="true" pattern="%.1f %%" />
     </channel-type>
     <channel-type id="cop-ctype">
        <item-type>Number:Dimensionless</item-type>
         <kind>state</kind>
         <label>COP</label>                      
         <category>qualityofservice</category>
-        <state readOnly="true" pattern="%.2f" />
+        <state readOnly="true" pattern="%.1f" />
     </channel-type>
     
 </thing:thing-descriptions>

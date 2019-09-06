@@ -2,6 +2,7 @@ package org.openhab.binding.mykitaheatpump.internal.models;
 
 import java.util.HashMap;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.DataTypeEnum;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.RegisterTypeEnum;
 
@@ -123,6 +124,16 @@ public class KitaHeatPump {
 
     public HashMap<KitaHeatPumpDataType, KitaHeatPumpDataValue> getData() {
         return data;
+    }
+
+    public KitaHeatPumpDataType getDataType(@NonNull String dataName) {
+        if (this.data != null) {
+            return this.data.keySet().stream().filter((KitaHeatPumpDataType item) -> {
+                return item != null && item.name.equals(dataName);
+            }).findAny().orElse(null);
+        }
+
+        return null;
     }
 
 }
