@@ -3,6 +3,7 @@ package org.openhab.binding.mykitaheatpump.internal.modbus;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -12,6 +13,7 @@ import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.core.types.UnDefType;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpThingHandler;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
+import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.DataTypeEnum;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.RegisterTypeEnum;
 import org.openhab.io.transport.modbus.BitArray;
@@ -128,19 +130,59 @@ public class ModbusPollers {
 
             ModbusConstants.ValueType readValueType = this.convertToValueType(type.type);
 
-            State numericState = ModbusBitUtilities.extractStateFromRegisters(registers, extractIndex, readValueType)
-                    .map(state -> (State) state).orElse(UnDefType.UNDEF);
+            Optional<DecimalType> numericStateOpt = ModbusBitUtilities.extractStateFromRegisters(registers,
+                    extractIndex, readValueType);
 
-            boolean boolValue = !numericState.equals(DecimalType.ZERO);
+            boolean boolValue = (numericStateOpt.isPresent()) && (!numericStateOpt.get().equals(DecimalType.ZERO));
 
-            String label = type.name;
-            ChannelUID channelUID = this.myThingHandler.getChannelsHandler().getChannelUID(label);
-            ret.put(channelUID, numericState);
+            String id = type.name;
+            ChannelUID channelUID = this.myThingHandler.getChannelsHandler().getChannelUID(id);
+            if (numericStateOpt.isPresent()) {
+                DecimalType numericState = numericStateOpt.get();
+                DecimalType numericStateConverted = this.convertState(type, numericState);
+
+                ret.put(channelUID, numericStateConverted);
+            } else {
+                ret.put(channelUID, UnDefType.UNDEF);
+
+            }
 
         });
 
         this.myThingHandler.getChannelsHandler().updateExpiredChannels(ret);
         return ret;
+    }
+
+    private DecimalType convertState(KitaHeatPumpDataType dataType, DecimalType originalState) {
+        double factor = this.readFactor(dataType);
+
+        DecimalType convertedState = new DecimalType(originalState.doubleValue() * factor);
+        return convertedState;
+    }
+
+    private double readFactor(KitaHeatPumpDataType dataType) {
+        if (dataType.register == RegisterTypeEnum.holding) {
+            switch (dataType.type) {
+                case _bool:
+                case _switch:
+                    return 1;
+
+                case dateTime:
+                    break;
+                case number:
+                    break;
+                case string:
+                    break;
+
+                case cop:
+                case flow_ro:
+                case pct:
+                case temperature_ro:
+                case temperature_rw:
+                    return 0.1;
+            }
+        }
+        return 1;
     }
 
     public Map<ChannelUID, State> processUpdateStates(ModbusReadRequestBlueprint request, BitArray bitsarray) {
