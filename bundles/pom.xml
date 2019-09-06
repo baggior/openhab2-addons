@@ -75,6 +75,7 @@
     <module>org.openhab.binding.dwdunwetter</module>
     <module>org.openhab.binding.elerotransmitterstick</module>
     <module>org.openhab.binding.enocean</module>
+    <module>org.openhab.binding.enturno</module>
     <module>org.openhab.binding.evohome</module>
     <module>org.openhab.binding.exec</module>
     <module>org.openhab.binding.feed</module>
@@ -96,6 +97,7 @@
     <module>org.openhab.binding.hpprinter</module>
     <module>org.openhab.binding.hue</module>
     <module>org.openhab.binding.hyperion</module>
+    <module>org.openhab.binding.iaqualink</module>
     <module>org.openhab.binding.icloud</module>
     <module>org.openhab.binding.ihc</module>
     <module>org.openhab.binding.innogysmarthome</module>
@@ -179,6 +181,7 @@
     <module>org.openhab.binding.serialbutton</module>
     <module>org.openhab.binding.silvercrestwifisocket</module>
     <module>org.openhab.binding.siemensrds</module>
+    <module>org.openhab.binding.sinope</module>
     <module>org.openhab.binding.sleepiq</module>
     <module>org.openhab.binding.smaenergymeter</module>
     <module>org.openhab.binding.smartmeter</module>
