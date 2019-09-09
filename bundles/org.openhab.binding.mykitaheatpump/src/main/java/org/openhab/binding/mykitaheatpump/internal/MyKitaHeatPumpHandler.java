@@ -103,30 +103,39 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
                 // TODO: handle data refresh
 
                 this.updateStatus(ThingStatus.ONLINE);
+
             } else {
-                String id = channelUID.getId();
+                String kitaDataId = channelUID.getId();
 
-                this.modbusWriter.writeData(id, command, new ModbusWriteCallback() {
-
-                    @Override
-                    public void onWriteResponse(ModbusWriteRequestBlueprint request, ModbusResponse response) {
-                        logger.trace("Write OK Request: {} \n\t Response: {}", request, response);
-                        // TODO Auto-generated method stub
-
-                        MyKitaHeatPumpHandler.this.updateStatus(ThingStatus.ONLINE);
-                    }
+                this.modbusWriter.writeData(kitaDataId, command, new ModbusWriteCallback() {
 
                     @Override
                     public void onError(ModbusWriteRequestBlueprint request, Exception error) {
-                        logger.error("Write FAILED Request: {} \n\t ERROR: {}", request, error);
-                        // TODO Auto-generated method stub
+                        logger.error("Write FAILED Command: {} \n\t Request: {} \n\t ERROR: {}", command, request,
+                                error);
 
                         MyKitaHeatPumpHandler.this.updateThingStatus(ThingStatus.OFFLINE,
                                 ThingStatusDetail.COMMUNICATION_ERROR,
                                 String.format("Error (%s) with read. Request: %s. Description: %s. Message: %s",
                                         error.getClass().getSimpleName(), request, error.toString(),
                                         error.getMessage()));
+
                     }
+
+                    @Override
+                    public void onWriteResponse(ModbusWriteRequestBlueprint request, ModbusResponse response) {
+                        // TODO Auto-generated method stub
+                        logger.debug("Write OK Command: {} \n\t Request: {} \n\t Response: {}", command, request,
+                                response);
+
+                        MyKitaHeatPumpHandler.this.updateThingStatus(ThingStatus.ONLINE, null, null);
+
+                        if (command instanceof State) {
+                            MyKitaHeatPumpHandler.this.tryUpdateChannelState(channelUID, ((State) command));
+                        }
+
+                    }
+
                 });
 
             }
@@ -329,7 +338,8 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
 
     }
 
-    void tryUpdateChannelState(ChannelUID uid, State state) {
+    @Override
+    public void tryUpdateChannelState(ChannelUID uid, State state) {
         try {
             this.updateState(uid, state);
         } catch (IllegalArgumentException e) {

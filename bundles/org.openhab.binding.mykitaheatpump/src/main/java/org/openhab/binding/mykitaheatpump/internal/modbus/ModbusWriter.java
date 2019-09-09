@@ -39,69 +39,71 @@ public class ModbusWriter {
         this.kita = kita;
     }
 
-    public void writeData(String id, Command command, ModbusWriteCallback modbusWriteCallback) {
+    public void writeData(String kitaDataId, Command originalCommand, ModbusWriteCallback modbusWriteCallback) {
         MyKitaHeatPumpConfiguration config = this.myThingHandler.getConfiguration();
 
         if (config != null) {
-            ModbusWriteRequestBlueprint request = this.requestFromCommand(id, command, config);
+            KitaHeatPumpDataType dataType = kita.getDataType(kitaDataId);
+            if (dataType != null) {
 
-            if (request != null) {
-                ModbusSlaveEndpoint slaveEndpoint = this.myThingHandler.asSlaveEndpoint();
+                Command command = this.convertCommand(dataType, originalCommand);
 
-                ModbusManager manager = this.myThingHandler.getManagerRef().get();
-                // if (request == null || slaveEndpoint == null || manager == null) {
-                // return;
-                // }
+                ModbusWriteRequestBlueprint request = this.requestFromCommand(dataType.register, dataType.address,
+                        command, config);
 
-                BasicWriteTask writeTask = new BasicWriteTask(slaveEndpoint, request, modbusWriteCallback);
-                logger.trace("Submitting write task: {}", writeTask);
-                manager.submitOneTimeWrite(writeTask);
+                if (request != null) {
+                    ModbusSlaveEndpoint slaveEndpoint = this.myThingHandler.asSlaveEndpoint();
+
+                    ModbusManager manager = this.myThingHandler.getManagerRef().get();
+                    // if (request == null || slaveEndpoint == null || manager == null) {
+                    // return;
+                    // }
+
+                    BasicWriteTask writeTask = new BasicWriteTask(slaveEndpoint, request, modbusWriteCallback);
+
+                    logger.trace("Submitting write task: {}", writeTask);
+                    manager.submitOneTimeWrite(writeTask);
+                }
             }
         }
 
     }
 
-    private @Nullable ModbusWriteRequestBlueprint requestFromCommand(String dataName, Command originalCommand,
-            MyKitaHeatPumpConfiguration config) {
+    private @Nullable ModbusWriteRequestBlueprint requestFromCommand(RegisterTypeEnum kitaDataRegister,
+            int kitaDataAddress, Command command, MyKitaHeatPumpConfiguration config) {
 
         ModbusWriteRequestBlueprint request = null;
 
         int slaveId = config.id;
         int maxTries = 1; // TODO config.getWriteMaxTries()
 
-        KitaHeatPumpDataType dataType = kita.getDataType(dataName);
+        // KitaHeatPumpDataType dataType = kita.getDataType(kitaDataId);
 
-        if (dataType != null) {
+        Integer writeStart = kitaDataAddress;
 
-            Integer writeStart = dataType.address;
+        if (kitaDataRegister == RegisterTypeEnum.coil || kitaDataRegister == RegisterTypeEnum.discrete_input) {
 
-            Command command = this.convertCommand(dataType, originalCommand);
+            Optional<Boolean> commandAsBoolean = ModbusBitUtilities.translateCommand2Boolean(command);
+            if (!commandAsBoolean.isPresent()) {
+                logger.warn(
+                        "Cannot process command {} with channel related to kita data address {} since command is not OnOffType, OpenClosedType or Decimal trying to write to coil. Do not know how to convert to 0/1.",
+                        command, kitaDataAddress);
 
-            if (dataType.register == RegisterTypeEnum.coil || dataType.register == RegisterTypeEnum.discrete_input) {
+            } else {
 
-                Optional<Boolean> commandAsBoolean = ModbusBitUtilities.translateCommand2Boolean(command);
-                if (!commandAsBoolean.isPresent()) {
-                    logger.warn(
-                            "Cannot process command {} with channel related to data name {} since command is not OnOffType, OpenClosedType or Decimal trying to write to coil. Do not know how to convert to 0/1.",
-                            command, dataName);
-
-                } else {
-
-                    boolean data = commandAsBoolean.get();
-                    request = new BasicModbusWriteCoilRequestBlueprint(slaveId, writeStart, data, false, maxTries);
-                }
-
-            } else // if (dataType.register == RegisterTypeEnum.holding)
-            {
-                ModbusConstants.ValueType writeValueType = ModbusConstants.ValueType.INT16;
-                ModbusRegisterArray data = ModbusBitUtilities.commandToRegisters(command, writeValueType);
-
-                boolean writeMultiple = data.size() > 1;
-                request = new BasicModbusWriteRegisterRequestBlueprint(slaveId, writeStart, data, writeMultiple,
-                        maxTries);
+                boolean data = commandAsBoolean.get();
+                request = new BasicModbusWriteCoilRequestBlueprint(slaveId, writeStart, data, false, maxTries);
             }
 
+        } else // if (dataType.register == RegisterTypeEnum.holding)
+        {
+            ModbusConstants.ValueType writeValueType = ModbusConstants.ValueType.INT16;
+            ModbusRegisterArray data = ModbusBitUtilities.commandToRegisters(command, writeValueType);
+
+            boolean writeMultiple = data.size() > 1;
+            request = new BasicModbusWriteRegisterRequestBlueprint(slaveId, writeStart, data, writeMultiple, maxTries);
         }
+
         return request;
     }
 

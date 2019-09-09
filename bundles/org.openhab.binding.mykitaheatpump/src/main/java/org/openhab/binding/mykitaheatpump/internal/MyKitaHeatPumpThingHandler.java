@@ -17,10 +17,12 @@ import java.util.function.Supplier;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.common.registry.Identifiable;
+import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.ThingStatusInfo;
 import org.eclipse.smarthome.core.thing.ThingUID;
+import org.eclipse.smarthome.core.types.State;
 import org.openhab.io.transport.modbus.ModbusManager;
 import org.openhab.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
 
@@ -74,4 +76,6 @@ public interface MyKitaHeatPumpThingHandler extends Identifiable<ThingUID> {
     public ThingStatusInfo getStatusInfo();
 
     public ChannelsHandler getChannelsHandler();
+
+    public void tryUpdateChannelState(ChannelUID uid, State state);
 }
