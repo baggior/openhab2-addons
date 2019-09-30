@@ -13,6 +13,10 @@
 
   <name>openHAB Add-ons :: Bundles :: IO :: Modbus Transport</name>
 
+  <properties>
+    <dep.noembedding>commons-pool2</dep.noembedding>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
