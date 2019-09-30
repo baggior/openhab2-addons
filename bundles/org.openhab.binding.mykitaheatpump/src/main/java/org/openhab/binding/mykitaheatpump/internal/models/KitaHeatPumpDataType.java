@@ -13,6 +13,7 @@ public class KitaHeatPumpDataType {
         cop,
         temperature_ro,
         temperature_rw,
+        rps_ro,
         flow_ro,
         _bool,
         _switch

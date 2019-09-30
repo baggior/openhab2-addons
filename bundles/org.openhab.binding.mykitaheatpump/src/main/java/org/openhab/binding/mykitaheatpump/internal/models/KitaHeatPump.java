@@ -54,7 +54,27 @@ public class KitaHeatPump {
                 10, RegisterTypeEnum.holding);
         data.put(dataType, new KitaHeatPumpDataValue());
 
-        // TODO
+        dataType = new KitaHeatPumpDataType("b12c", "Evaporator temperature from Low pressure conversion",
+                DataTypeEnum.temperature_ro, 13, RegisterTypeEnum.holding);
+        data.put(dataType, new KitaHeatPumpDataValue());
+        dataType = new KitaHeatPumpDataType("b11c", "Condensing temperature from High pressure conversion",
+                DataTypeEnum.temperature_ro, 14, RegisterTypeEnum.holding);
+        data.put(dataType, new KitaHeatPumpDataValue());
+        dataType = new KitaHeatPumpDataType("superheating", "Superheating", DataTypeEnum.temperature_ro, 15,
+                RegisterTypeEnum.holding);
+        data.put(dataType, new KitaHeatPumpDataValue());
+
+        dataType = new KitaHeatPumpDataType("rps", "Compressor rotor speed", DataTypeEnum.rps_ro, 18,
+                RegisterTypeEnum.holding);
+        data.put(dataType, new KitaHeatPumpDataValue());
+
+        dataType = new KitaHeatPumpDataType("avg_ext", "Average external temperature", DataTypeEnum.temperature_ro, 31,
+                RegisterTypeEnum.holding);
+        data.put(dataType, new KitaHeatPumpDataValue());
+
+        dataType = new KitaHeatPumpDataType("opt_delta", "Delta optimizer", DataTypeEnum.temperature_ro, 32,
+                RegisterTypeEnum.holding);
+        data.put(dataType, new KitaHeatPumpDataValue());
 
         // SET POINTS
         dataType = new KitaHeatPumpDataType("chiller_set", "Setpoint chiller mode (flash memory)",
@@ -103,6 +123,21 @@ public class KitaHeatPump {
         // dataType = new KitaHeatPumpDataType("contact", "contact", DataTypeEnum._switch, 40, RegisterTypeEnum.coil);
         // data.put(dataType, new KitaHeatPumpDataValue());
 
+        // INTEGERs
+        dataType = new KitaHeatPumpDataType("switch", "Switch State", DataTypeEnum._switch, 221,
+                RegisterTypeEnum.holding);
+        data.put(dataType, new KitaHeatPumpDataValue());
+        dataType = new KitaHeatPumpDataType("mode", "Operation Mode", DataTypeEnum._switch, 227,
+                RegisterTypeEnum.holding);
+        data.put(dataType, new KitaHeatPumpDataValue());
+
+        // TODO
+        dataType = new KitaHeatPumpDataType("cmp_inst_pct", "Istant compressor power percentage", DataTypeEnum.pct, 242,
+                RegisterTypeEnum.holding);
+        data.put(dataType, new KitaHeatPumpDataValue());
+        dataType = new KitaHeatPumpDataType("cmp_avg_pct", "Average compressor power percentage", DataTypeEnum.pct, 243,
+                RegisterTypeEnum.holding);
+        data.put(dataType, new KitaHeatPumpDataValue());
     }
 
     @Override

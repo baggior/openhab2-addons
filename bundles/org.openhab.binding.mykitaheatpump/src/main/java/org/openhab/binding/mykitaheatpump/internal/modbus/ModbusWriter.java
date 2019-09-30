@@ -140,6 +140,7 @@ public class ModbusWriter {
                 case pct:
                 case temperature_ro:
                 case temperature_rw:
+                case rps_ro:
                     return 10;
             }
         }
