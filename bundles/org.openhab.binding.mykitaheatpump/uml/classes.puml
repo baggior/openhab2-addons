@@ -1,0 +1,60 @@
+@startuml
+
+interface MyKitaHeatPumpThingHandlerInterface
+
+abstract  class openhab.BaseThingHandler
+
+class MyKitaHeatPumpThingHandlerFactory <<Component>>
+class MyKitaHeatPumpThingHandlerImpl 
+
+class MyKitaHeatPumpConfiguration
+
+class ch.ChannelsCacheHandler
+class ch.ChannelsBuilder
+
+class mb.ModbusPollers
+class mb.ModbusDataValuePoller
+class mb.ModbusHandler
+class mb.ReadCallback
+class mb.ModbusWriter
+
+
+interface openhab.modbus.ModbusManagerListener
+class openhab.modbus.ModbusManager
+class openhab.modbus.PollTask
+interface openhab.modbus.ModbusReadCallback
+
+
+MyKitaHeatPumpThingHandlerImpl <. MyKitaHeatPumpThingHandlerFactory : builds < 
+
+ 
+MyKitaHeatPumpThingHandlerImpl ..up|> MyKitaHeatPumpThingHandlerInterface
+MyKitaHeatPumpThingHandlerImpl --|> openhab.BaseThingHandler
+MyKitaHeatPumpThingHandlerImpl *--> MyKitaHeatPumpConfiguration
+MyKitaHeatPumpThingHandlerImpl *--> ch.ChannelsCacheHandler
+MyKitaHeatPumpThingHandlerImpl *--> mb.ModbusHandler
+
+
+ch.ChannelsCacheHandler --> MyKitaHeatPumpThingHandlerInterface
+ch.ChannelsCacheHandler ..> ch.ChannelsBuilder : "uses" >
+
+mb.ModbusHandler --> MyKitaHeatPumpThingHandlerInterface
+mb.ModbusHandler ..|> openhab.modbus.ModbusManagerListener
+mb.ModbusHandler o--> openhab.modbus.ModbusManager
+mb.ModbusHandler *--> "1" mb.ModbusPollers
+mb.ModbusHandler ..> mb.ModbusWriter : "uses" >
+
+mb.ModbusPollers *-"n" mb.ModbusDataValuePoller
+mb.ModbusPollers --> MyKitaHeatPumpThingHandlerInterface
+
+mb.ModbusWriter --> MyKitaHeatPumpThingHandlerInterface
+
+mb.ModbusDataValuePoller o--> "1" openhab.modbus.PollTask
+mb.ModbusDataValuePoller *-- "1" mb.ReadCallback
+mb.ModbusDataValuePoller --> MyKitaHeatPumpThingHandlerInterface
+
+mb.ReadCallback ..> mb.ModbusHandler
+mb.ReadCallback --> MyKitaHeatPumpThingHandlerInterface
+mb.ReadCallback ..|> openhab.modbus.ModbusReadCallback
+
+@enduml

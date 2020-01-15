@@ -1,4 +1,4 @@
-package org.openhab.binding.mykitaheatpump.internal;
+package org.openhab.binding.mykitaheatpump.internal.channels;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,12 +8,16 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.type.ChannelTypeUID;
 import org.eclipse.smarthome.core.types.State;
+import org.openhab.binding.mykitaheatpump.internal.ModbusConfigurationException;
+import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpBindingConstants;
+import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpConfiguration;
+import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpThingHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Manages OpenHab Thing Channels and cache
- * 
+ *
  * @author utente
  *
  */
@@ -28,23 +32,44 @@ public class ChannelsHandler {
     private Map<ChannelUID, Long> channelLastUpdated = new HashMap<>();
     private long updateUnchangedValuesEveryMillis;
 
-    final MyKitaHeatPumpHandler thingHandler;
+    private final MyKitaHeatPumpThingHandler thingHandler;
 
-    ChannelsHandler(MyKitaHeatPumpHandler myKitaHeatPumpHandler) {
+    public ChannelsHandler(MyKitaHeatPumpThingHandler myKitaHeatPumpHandler) {
         this.thingHandler = myKitaHeatPumpHandler;
     }
 
-    void configure(MyKitaHeatPumpConfiguration configuration) {
+    public void configure() throws ModbusConfigurationException {
         logger.debug("ChannelsHandler configuration..");
-        updateUnchangedValuesEveryMillis = configuration.updateUnchangedValuesEveryMillis;
 
+        MyKitaHeatPumpConfiguration config = this.thingHandler.getConfiguration();
+        if (config == null) {
+            throw new ModbusConfigurationException("config must be non-null!");
+        }
+        updateUnchangedValuesEveryMillis = config.updateUnchangedValuesEveryMillis;
+
+    }
+
+    public void initialize() {
+        // TODO Auto-generated method stub
+        // List<Channel> channels = ChannelsBuilder.of(kita, this).build();
+        // Thing newThing = this.editThing().withChannels(channels).build();
+        // this.updateThing(newThing);
+
+    }
+
+    public void dispose() {
+
+        logger.debug("ChannelsHandler dispose..");
+        channelCache.clear();
+        channelLastState.clear();
+        channelLastUpdated.clear();
     }
 
     public ChannelUID getChannelUID(String channelID) {
         return channelCache.computeIfAbsent(channelID, id -> new ChannelUID(thingHandler.getUID(), id));
     }
 
-    public ChannelTypeUID getChannelTypeUID(String channelTypeID) {
+    ChannelTypeUID getChannelTypeUID(String channelTypeID) {
         return channelTypeCache.computeIfAbsent(channelTypeID,
                 id -> new ChannelTypeUID(MyKitaHeatPumpBindingConstants.BINDING_ID, id));
     }
@@ -71,14 +96,6 @@ public class ChannelsHandler {
 
             channelLastUpdated.put(uid, now);
         }
-    }
-
-    void dispose() {
-
-        logger.debug("ChannelsHandler dispose..");
-        channelCache.clear();
-        channelLastState.clear();
-        channelLastUpdated.clear();
     }
 
 }

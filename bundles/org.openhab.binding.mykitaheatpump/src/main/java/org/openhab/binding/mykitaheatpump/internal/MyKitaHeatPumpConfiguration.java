@@ -39,5 +39,5 @@ public class MyKitaHeatPumpConfiguration {
     public long cacheMillis = 50L;
 
     // data item update
-    long updateUnchangedValuesEveryMillis = 5000L;
+    public long updateUnchangedValuesEveryMillis = 5000L;
 }

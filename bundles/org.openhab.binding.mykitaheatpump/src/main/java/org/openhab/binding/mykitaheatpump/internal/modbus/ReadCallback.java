@@ -8,6 +8,7 @@ import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.ThingStatusInfo;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpConfiguration;
+import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpThingHandler;
 import org.openhab.io.transport.modbus.BitArray;
 import org.openhab.io.transport.modbus.ModbusReadCallback;
 import org.openhab.io.transport.modbus.ModbusReadRequestBlueprint;
@@ -34,15 +35,17 @@ class ReadCallback implements ModbusReadCallback {
      */
     // private final DataValuePoller dataValuePoller;
     // private final ChannelsHandler channelsHandler;
-    private final ModbusPollers modbusPollers;
+    // private final ModbusPollers modbusPollers;
+    private final MyKitaHeatPumpThingHandler handler;
 
     /**
      * @param modbusPollers
      */
-    ReadCallback(ModbusPollers modbusPollers) {
+    ReadCallback(MyKitaHeatPumpThingHandler handler) {
 
-        this.modbusPollers = modbusPollers;
+        // this.modbusPollers = modbusPollers;
         // this.channelsHandler = modbusPollers.myThingHandler.getChannelsHandler();
+        this.handler = handler;
     }
 
     private @Nullable AtomicStampedKeyValue<ModbusReadRequestBlueprint, ModbusRegisterArray> lastRegisters;
@@ -54,11 +57,11 @@ class ReadCallback implements ModbusReadCallback {
     @Override
     public void onRegisters(ModbusReadRequestBlueprint request, ModbusRegisterArray registers) {
         // Ignore all incoming data and errors if configuration is not correct
-        if (this.modbusPollers.myThingHandler.hasConfigurationError() || this.disposed) {
+        if (this.handler.hasConfigurationError() || this.disposed) {
             return;
         }
 
-        MyKitaHeatPumpConfiguration config = this.modbusPollers.myThingHandler.getConfiguration();
+        MyKitaHeatPumpConfiguration config = this.handler.getConfiguration();
         if (config != null && config.cacheMillis >= 0) {
             AtomicStampedKeyValue<ModbusReadRequestBlueprint, ModbusRegisterArray> lastRegisters = this.lastRegisters;
             if (lastRegisters == null) {
@@ -67,22 +70,21 @@ class ReadCallback implements ModbusReadCallback {
                 lastRegisters.update(System.currentTimeMillis(), request, registers);
             }
         }
-        this.logger.debug("Thing {} received registers {} for request {}", this.modbusPollers.myThingHandler.getUID(),
-                registers, request);
+        this.logger.debug("Thing {} received registers {} for request {}", this.handler.getUID(), registers, request);
         resetCommunicationError();
         // childCallbacks.forEach(handler -> handler.onRegisters(request, registers));
 
-        this.modbusPollers.processUpdateStates(request, registers);
+        this.handler.getModbusHandler().processUpdateStates(request, registers);
 
     }
 
     @Override
     public void onBits(ModbusReadRequestBlueprint request, BitArray coils) {
         // Ignore all incoming data and errors if configuration is not correct
-        if (this.modbusPollers.myThingHandler.hasConfigurationError() || this.disposed) {
+        if (this.handler.hasConfigurationError() || this.disposed) {
             return;
         }
-        MyKitaHeatPumpConfiguration config = this.modbusPollers.myThingHandler.getConfiguration();
+        MyKitaHeatPumpConfiguration config = this.handler.getConfiguration();
         if (config != null && config.cacheMillis >= 0) {
             AtomicStampedKeyValue<ModbusReadRequestBlueprint, BitArray> lastCoils = this.lastCoils;
             if (lastCoils == null) {
@@ -91,13 +93,12 @@ class ReadCallback implements ModbusReadCallback {
                 lastCoils.update(System.currentTimeMillis(), request, coils);
             }
         }
-        this.logger.debug("Thing {} received coils {} for request {}", this.modbusPollers.myThingHandler.getUID(),
-                coils, request);
+        this.logger.debug("Thing {} received coils {} for request {}", this.handler.getUID(), coils, request);
 
         resetCommunicationError();
         // childCallbacks.forEach(handler -> handler.onBits(request, coils));
 
-        this.modbusPollers.processUpdateStates(request, coils);
+        this.handler.getModbusHandler().processUpdateStates(request, coils);
 
     }
 
@@ -105,11 +106,11 @@ class ReadCallback implements ModbusReadCallback {
     public void onError(ModbusReadRequestBlueprint request, Exception error) {
 
         // Ignore all incoming data and errors if configuration is not correct
-        if (this.modbusPollers.myThingHandler.hasConfigurationError() || this.disposed) {
+        if (this.handler.hasConfigurationError() || this.disposed) {
             return;
         }
 
-        MyKitaHeatPumpConfiguration config = this.modbusPollers.myThingHandler.getConfiguration();
+        MyKitaHeatPumpConfiguration config = this.handler.getConfiguration();
         if (config != null && config.cacheMillis >= 0) {
             AtomicStampedKeyValue<ModbusReadRequestBlueprint, Exception> lastError = this.lastError;
             if (lastError == null) {
@@ -119,24 +120,23 @@ class ReadCallback implements ModbusReadCallback {
             }
         }
 
-        this.logger.debug("Thing {} received error {} for request {}", this.modbusPollers.myThingHandler.getUID(),
-                error, request);
+        this.logger.debug("Thing {} received error {} for request {}", this.handler.getUID(), error, request);
 
         // childCallbacks.forEach(handler -> handler.onError(request, error));
-        this.modbusPollers.myThingHandler.updateThingStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+        this.handler.updateThingStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                 String.format("Error with read: %s: %s", error.getClass().getName(), error.getMessage()));
     }
 
     private void resetCommunicationError() {
-        ThingStatusInfo statusInfo = this.modbusPollers.myThingHandler.getStatusInfo();
+        ThingStatusInfo statusInfo = this.handler.getStatusInfo();
         if (ThingStatus.OFFLINE.equals(statusInfo.getStatus())
                 && ThingStatusDetail.COMMUNICATION_ERROR.equals(statusInfo.getStatusDetail())) {
-            this.modbusPollers.myThingHandler.updateThingStatus(ThingStatus.ONLINE, null, null);
+            this.handler.updateThingStatus(ThingStatus.ONLINE, null, null);
         }
     }
 
     private ThingUID getThingUID() {
-        return this.modbusPollers.myThingHandler.getUID();
+        return this.handler.getUID();
     }
 
     @Override

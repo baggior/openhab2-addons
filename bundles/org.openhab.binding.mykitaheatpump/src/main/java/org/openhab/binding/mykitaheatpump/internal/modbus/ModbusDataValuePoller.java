@@ -31,13 +31,13 @@ class ModbusDataValuePoller {
 
     private final ReadCallback callback;
 
-    ModbusDataValuePoller(ModbusPollers modbusPollers, @NonNull ModbusReadFunctionCode functionCode, int start,
-            int length) {
+    ModbusDataValuePoller(MyKitaHeatPumpThingHandler myThingHandler, @NonNull ModbusReadFunctionCode functionCode,
+            int start, int length) {
 
         // this.modbusMasterService = modbusMasterService;
-        this.myThingHandler = modbusPollers.myThingHandler;
+        this.myThingHandler = myThingHandler;
 
-        this.callback = new ReadCallback(modbusPollers);
+        this.callback = new ReadCallback(myThingHandler);
 
         this.functionCode = functionCode;
 
@@ -58,7 +58,7 @@ class ModbusDataValuePoller {
                     this.start, this.length);
             @NonNull
             PollTask task = (@NonNull PollTask) pollTask;
-            myThingHandler.getManagerRef().get().unregisterRegularPoll(task);
+            myThingHandler.getModbusHandler().getManager().unregisterRegularPoll(task);
             pollTask = null;
             this.callback.resetCache();
         }
@@ -102,7 +102,8 @@ class ModbusDataValuePoller {
                 this.start, this.length, config.maxTries);
 
         @NonNull
-        PollTask task = new BasicPollTaskImpl(myThingHandler.asSlaveEndpoint(), request, this.callback);
+        PollTask task = new BasicPollTaskImpl(myThingHandler.getModbusHandler().getSlaveEndpoint(), request,
+                this.callback);
         this.pollTask = task;
 
         if (config.refresh <= 0L) {
@@ -112,7 +113,7 @@ class ModbusDataValuePoller {
             logger.info("Registering polling with ModbusManager:\n function {}, start {}, length {}, refresh {}",
                     functionCode, start, length, config.refresh);
 
-            myThingHandler.getManagerRef().get().registerRegularPoll(task, config.refresh, 0);
+            myThingHandler.getModbusHandler().getManager().registerRegularPoll(task, config.refresh, 0);
 
         }
     }

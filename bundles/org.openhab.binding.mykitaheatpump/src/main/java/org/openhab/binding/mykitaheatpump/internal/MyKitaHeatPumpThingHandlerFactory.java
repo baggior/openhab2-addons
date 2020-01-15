@@ -32,16 +32,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link MyKitaHeatPumpHandlerFactory} is responsible for creating things and thing
+ * The {@link MyKitaHeatPumpThingHandlerFactory} is responsible for creating things and thing
  * handlers.
  *
  * @author Marco Tombesi - Initial contribution
  */
 @NonNullByDefault
 @Component(configurationPid = "binding.mykitaheatpump", service = ThingHandlerFactory.class)
-public class MyKitaHeatPumpHandlerFactory extends BaseThingHandlerFactory {
+public class MyKitaHeatPumpThingHandlerFactory extends BaseThingHandlerFactory {
 
-    private final Logger logger = LoggerFactory.getLogger(MyKitaHeatPumpHandlerFactory.class);
+    private final Logger logger = LoggerFactory.getLogger(MyKitaHeatPumpThingHandlerFactory.class);
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = new HashSet<>();
     static {
@@ -63,7 +63,7 @@ public class MyKitaHeatPumpHandlerFactory extends BaseThingHandlerFactory {
 
         if (THING_TYPE_KITA_REGISTERS.equals(thingTypeUID)) {
             logger.info("Thing created label: '{}', uuid: {}", thing.getLabel(), thingTypeUID);
-            return new MyKitaHeatPumpHandler(thing, () -> manager);
+            return new MyKitaHeatPumpThingHandlerImpl(thing, () -> manager);
         } else if (THING_TYPE_TEST.equals(thingTypeUID)) {
             logger.info("Thing TEST created label: '{}', uuid: {}", thing.getLabel(), thingTypeUID);
             return new TestHandler(thing, () -> manager);

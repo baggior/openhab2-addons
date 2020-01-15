@@ -1,4 +1,4 @@
-package org.openhab.binding.mykitaheatpump.internal;
+package org.openhab.binding.mykitaheatpump.internal.channels;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,17 +14,18 @@ import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.DataTypeEnum;
 
 @NonNullByDefault
-public class ChannelsBuilder {
+class ChannelsBuilder {
     @Nullable
     private KitaHeatPump kita;
-    private final ChannelsHandler channelsHandler;
+    private final ChannelsCacheHandler channelsHandler;
 
-    ChannelsBuilder(ChannelsHandler channelsHandler) {
+    ChannelsBuilder(ChannelsCacheHandler channelsHandler) {
         this.channelsHandler = channelsHandler;
         // this.thingUid = channelsHandler.thingHandler.getUID().getAsString();
     }
 
-    public static ChannelsBuilder of(KitaHeatPump kita, ChannelsHandler channelsHandler) {
+    public static ChannelsBuilder of(KitaHeatPump kita, ChannelsCacheHandler channelsHandler) {
+
         ChannelsBuilder builder = new ChannelsBuilder(channelsHandler);
         builder.kita(kita);
 
@@ -36,7 +37,7 @@ public class ChannelsBuilder {
         return this;
     }
 
-    List<Channel> build() {
+    public List<Channel> build() {
         List<Channel> ret = new ArrayList<Channel>();
         if (this.kita != null) {
             this.kita.getData().forEach((dataType, dataValue) -> {

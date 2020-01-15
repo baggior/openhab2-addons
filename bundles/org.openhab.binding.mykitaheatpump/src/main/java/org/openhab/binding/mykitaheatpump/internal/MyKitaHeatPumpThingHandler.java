@@ -12,19 +12,22 @@
  */
 package org.openhab.binding.mykitaheatpump.internal;
 
-import java.util.function.Supplier;
+import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.common.registry.Identifiable;
+import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
+import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.ThingStatusInfo;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.types.State;
-import org.openhab.io.transport.modbus.ModbusManager;
-import org.openhab.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
+import org.openhab.binding.mykitaheatpump.internal.channels.ChannelsCacheHandler;
+import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusHandler;
+import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 
 /**
  * Base interface for thing handlers of endpoint things
@@ -41,22 +44,22 @@ public interface MyKitaHeatPumpThingHandler extends Identifiable<ThingUID> {
      *
      * @return endpoint represented by this thing handler
      */
-    public ModbusSlaveEndpoint asSlaveEndpoint();
+    // public ModbusSlaveEndpoint asSlaveEndpoint();
 
-    /**
-     * Get Slave ID, also called as unit id, represented by the thing
-     *
-     * @return slave id represented by this thing handler
-     * @throws EndpointNotInitializedException in case the initialization is not complete
-     */
-    public int getSlaveId();
+    // /**
+    // * Get Slave ID, also called as unit id, represented by the thing
+    // *
+    // * @return slave id represented by this thing handler
+    // * @throws EndpointNotInitializedException in case the initialization is not complete
+    // */
+    // public int getSlaveId();
 
     /**
      * Get {@link ModbusManager} supplier
      *
      * @return reference to ModbusManager
      */
-    public Supplier<ModbusManager> getManagerRef();
+    // public Supplier<ModbusManager> getManagerRef();
 
     /**
      * Return true if auto discovery is enabled for this endpoint
@@ -74,7 +77,15 @@ public interface MyKitaHeatPumpThingHandler extends Identifiable<ThingUID> {
 
     public ThingStatusInfo getStatusInfo();
 
-    public ChannelsHandler getChannelsHandler();
+    public ChannelsCacheHandler getChannelsHandler();
 
     public void tryUpdateChannelState(ChannelUID uid, State state);
+
+    public Thing getThing();
+
+    public ModbusHandler getModbusHandler();
+
+    public KitaHeatPump getKita();
+
+    public void updateThingChannels(List<Channel> channels);
 }

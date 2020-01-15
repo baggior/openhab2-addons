@@ -6,7 +6,11 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
+import org.eclipse.smarthome.core.thing.ChannelUID;
+import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.types.Command;
+import org.eclipse.smarthome.core.types.State;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpConfiguration;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpThingHandler;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
@@ -19,6 +23,7 @@ import org.openhab.io.transport.modbus.ModbusBitUtilities;
 import org.openhab.io.transport.modbus.ModbusConstants;
 import org.openhab.io.transport.modbus.ModbusManager;
 import org.openhab.io.transport.modbus.ModbusRegisterArray;
+import org.openhab.io.transport.modbus.ModbusResponse;
 import org.openhab.io.transport.modbus.ModbusWriteCallback;
 import org.openhab.io.transport.modbus.ModbusWriteRequestBlueprint;
 import org.openhab.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
@@ -26,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @NonNullByDefault
-public class ModbusWriter {
+class ModbusWriter {
 
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -34,15 +39,46 @@ public class ModbusWriter {
 
     final KitaHeatPump kita;
 
-    public ModbusWriter(KitaHeatPump kita, MyKitaHeatPumpThingHandler myThingHandler) {
+    public ModbusWriter(MyKitaHeatPumpThingHandler myThingHandler) {
         this.myThingHandler = myThingHandler;
-        this.kita = kita;
+        this.kita = myThingHandler.getKita();
     }
 
-    public void writeData(String kitaDataId, Command originalCommand, ModbusWriteCallback modbusWriteCallback) {
+    public void writeData(ChannelUID channelUID, Command command) {
+
+        this.writeData(channelUID.getId(), command, new ModbusWriteCallback() {
+
+            @Override
+            public void onError(ModbusWriteRequestBlueprint request, Exception error) {
+                logger.error("Write FAILED Command: {} \n\t Request: {} \n\t ERROR: {}", command, request, error);
+
+                myThingHandler.updateThingStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                        String.format("Error (%s) with read. Request: %s. Description: %s. Message: %s",
+                                error.getClass().getSimpleName(), request, error.toString(), error.getMessage()));
+
+            }
+
+            @Override
+            public void onWriteResponse(ModbusWriteRequestBlueprint request, ModbusResponse response) {
+                // TODO Auto-generated method stub
+                logger.debug("Write OK Command: {} \n\t Request: {} \n\t Response: {}", command, request, response);
+
+                myThingHandler.updateThingStatus(ThingStatus.ONLINE, null, null);
+
+                if (command instanceof State) {
+                    myThingHandler.tryUpdateChannelState(channelUID, ((State) command));
+                }
+
+            }
+
+        });
+
+    }
+
+    private void writeData(String kitaDataId, Command originalCommand, ModbusWriteCallback modbusWriteCallback) {
         MyKitaHeatPumpConfiguration config = this.myThingHandler.getConfiguration();
 
-        if (config != null) {
+        if (config != null && this.myThingHandler.getModbusHandler() != null) {
             KitaHeatPumpDataType dataType = kita.getDataType(kitaDataId);
             if (dataType != null) {
 
@@ -52,9 +88,10 @@ public class ModbusWriter {
                         command, config);
 
                 if (request != null) {
-                    ModbusSlaveEndpoint slaveEndpoint = this.myThingHandler.asSlaveEndpoint();
 
-                    ModbusManager manager = this.myThingHandler.getManagerRef().get();
+                    ModbusSlaveEndpoint slaveEndpoint = this.myThingHandler.getModbusHandler().getSlaveEndpoint();
+
+                    ModbusManager manager = this.myThingHandler.getModbusHandler().getManager();
                     // if (request == null || slaveEndpoint == null || manager == null) {
                     // return;
                     // }

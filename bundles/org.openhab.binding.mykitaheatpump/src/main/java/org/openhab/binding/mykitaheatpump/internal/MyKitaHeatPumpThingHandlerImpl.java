@@ -29,53 +29,40 @@ import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.types.State;
-import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusPollers;
-import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusWriter;
+import org.openhab.binding.mykitaheatpump.internal.channels.ChannelsCacheHandler;
+import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusHandler;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 import org.openhab.io.transport.modbus.ModbusManager;
-import org.openhab.io.transport.modbus.ModbusManagerListener;
-import org.openhab.io.transport.modbus.ModbusResponse;
-import org.openhab.io.transport.modbus.ModbusWriteCallback;
-import org.openhab.io.transport.modbus.ModbusWriteRequestBlueprint;
-import org.openhab.io.transport.modbus.endpoint.EndpointPoolConfiguration;
-import org.openhab.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
-import org.openhab.io.transport.modbus.endpoint.ModbusTCPSlaveEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link MyKitaHeatPumpHandler} is responsible for handling commands, which are
+ * The {@link MyKitaHeatPumpThingHandlerImpl} is responsible for handling commands, which are
  * sent to one of the channels.
  *
  * @author Marco Tombesi - Initial contribution
  */
 @NonNullByDefault
-public class MyKitaHeatPumpHandler extends BaseThingHandler
-        implements ModbusManagerListener, MyKitaHeatPumpThingHandler {
+public class MyKitaHeatPumpThingHandlerImpl extends BaseThingHandler implements MyKitaHeatPumpThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private @Nullable MyKitaHeatPumpConfiguration config;
-    private @Nullable ModbusTCPSlaveEndpoint endpoint;
-    private @Nullable EndpointPoolConfiguration poolConfiguration;
 
-    protected Supplier<ModbusManager> managerRef;
+    private ModbusHandler modbusHandler;
 
-    // @Nullable
-    // volatile DataValuePoller poller;
-
-    final ModbusPollers modbusPollers;
-    final ModbusWriter modbusWriter;
     final KitaHeatPump kita;
-    final ChannelsHandler channelsHandler;
+    final ChannelsCacheHandler channelsHandler;
 
-    public MyKitaHeatPumpHandler(Thing thing, Supplier<ModbusManager> managerRef) {
+    public MyKitaHeatPumpThingHandlerImpl(Thing thing, Supplier<ModbusManager> managerRef) {
         super(thing);
-        this.managerRef = managerRef;
+        // this.managerRef = managerRef;
         this.kita = new KitaHeatPump();
-        this.modbusPollers = new ModbusPollers(kita, this);
-        this.modbusWriter = new ModbusWriter(kita, this);
-        this.channelsHandler = new ChannelsHandler(this);
+        // this.modbusPollers = new ModbusPollers(this);
+        // this.modbusWriter = new ModbusWriter(kita, this);
+        this.channelsHandler = new ChannelsCacheHandler(this);
+
+        this.modbusHandler = new ModbusHandler(this, managerRef);
     }
 
     @Override
@@ -105,38 +92,40 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
                 this.updateStatus(ThingStatus.ONLINE);
 
             } else {
-                String kitaDataId = channelUID.getId();
 
-                this.modbusWriter.writeData(kitaDataId, command, new ModbusWriteCallback() {
+                this.modbusHandler.writeData(channelUID, command);
 
-                    @Override
-                    public void onError(ModbusWriteRequestBlueprint request, Exception error) {
-                        logger.error("Write FAILED Command: {} \n\t Request: {} \n\t ERROR: {}", command, request,
-                                error);
-
-                        MyKitaHeatPumpHandler.this.updateThingStatus(ThingStatus.OFFLINE,
-                                ThingStatusDetail.COMMUNICATION_ERROR,
-                                String.format("Error (%s) with read. Request: %s. Description: %s. Message: %s",
-                                        error.getClass().getSimpleName(), request, error.toString(),
-                                        error.getMessage()));
-
-                    }
-
-                    @Override
-                    public void onWriteResponse(ModbusWriteRequestBlueprint request, ModbusResponse response) {
-                        // TODO Auto-generated method stub
-                        logger.debug("Write OK Command: {} \n\t Request: {} \n\t Response: {}", command, request,
-                                response);
-
-                        MyKitaHeatPumpHandler.this.updateThingStatus(ThingStatus.ONLINE, null, null);
-
-                        if (command instanceof State) {
-                            MyKitaHeatPumpHandler.this.tryUpdateChannelState(channelUID, ((State) command));
-                        }
-
-                    }
-
-                });
+                // String kitaDataId = channelUID.getId();
+                // this.modbusWriter.writeData(kitaDataId, command, new ModbusWriteCallback() {
+                //
+                // @Override
+                // public void onError(ModbusWriteRequestBlueprint request, Exception error) {
+                // logger.error("Write FAILED Command: {} \n\t Request: {} \n\t ERROR: {}", command, request,
+                // error);
+                //
+                // MyKitaHeatPumpThingHandlerImpl.this.updateThingStatus(ThingStatus.OFFLINE,
+                // ThingStatusDetail.COMMUNICATION_ERROR,
+                // String.format("Error (%s) with read. Request: %s. Description: %s. Message: %s",
+                // error.getClass().getSimpleName(), request, error.toString(),
+                // error.getMessage()));
+                //
+                // }
+                //
+                // @Override
+                // public void onWriteResponse(ModbusWriteRequestBlueprint request, ModbusResponse response) {
+                // // TODO Auto-generated method stub
+                // logger.debug("Write OK Command: {} \n\t Request: {} \n\t Response: {}", command, request,
+                // response);
+                //
+                // MyKitaHeatPumpThingHandlerImpl.this.updateThingStatus(ThingStatus.ONLINE, null, null);
+                //
+                // if (command instanceof State) {
+                // MyKitaHeatPumpThingHandlerImpl.this.tryUpdateChannelState(channelUID, ((State) command));
+                // }
+                //
+                // }
+                //
+                // });
 
             }
         }
@@ -146,25 +135,11 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
     //////////////////////////////////////////////////////////////////////////////////////
 
     private void configure() throws ModbusConfigurationException {
-        // logger.debug("Start initializing!");
-        MyKitaHeatPumpConfiguration config = getConfigAs(MyKitaHeatPumpConfiguration.class);
+        logger.debug("Start configure");
+        this.config = super.getConfigAs(MyKitaHeatPumpConfiguration.class);
 
-        String host = config.host;
-        if (host == null) {
-            throw new ModbusConfigurationException("host must be non-null!");
-        }
-
-        this.config = config;
-        this.endpoint = new ModbusTCPSlaveEndpoint(host, config.port);
-
-        EndpointPoolConfiguration poolConfiguration = new EndpointPoolConfiguration();
-        this.poolConfiguration = poolConfiguration;
-        poolConfiguration.setConnectMaxTries(config.connectMaxTries);
-        poolConfiguration.setConnectTimeoutMillis(config.connectTimeoutMillis);
-        poolConfiguration.setInterConnectDelayMillis(config.timeBetweenReconnectMillis);
-        poolConfiguration.setInterTransactionDelayMillis(config.timeBetweenTransactionsMillis);
-        poolConfiguration.setReconnectAfterMillis(config.reconnectAfterMillis);
-
+        this.channelsHandler.configure();
+        this.modbusHandler.configure();
     }
 
     @Override
@@ -179,25 +154,12 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
 
             this.configure();
 
-            List<Channel> channels = ChannelsBuilder.of(this.kita, this.channelsHandler).build();
-            Thing newThing = this.editThing().withChannels(channels).build();
-            this.updateThing(newThing);
+            this.channelsHandler.initialize();
 
-            if (this.config != null) {
-                channelsHandler.configure(this.config);
-            }
-
-            @Nullable
-            ModbusTCPSlaveEndpoint endpoint = this.endpoint;
-            if (endpoint == null) {
-                throw new IllegalArgumentException("endpoint null after configuration!");
-            }
-            managerRef.get().addListener(this);
-            managerRef.get().setEndpointPoolConfiguration(endpoint, poolConfiguration);
-
-            modbusPollers.initializePollers();
+            this.modbusHandler.initialize();
 
             updateStatus(ThingStatus.ONLINE);
+
         } catch (ModbusConfigurationException e) {
             logger.debug("Exception during initialization", e);
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, String
@@ -241,55 +203,42 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
          */
     }
 
-    @Override
-    synchronized public void onEndpointPoolConfigurationSet(ModbusSlaveEndpoint otherEndpoint,
-            @Nullable EndpointPoolConfiguration otherPoolConfiguration) {
-        if (endpoint == null) {
-            return;
-        }
-        EndpointPoolConfiguration poolConfiguration = this.poolConfiguration;
-        if (poolConfiguration != null && otherEndpoint.equals(this.endpoint)
-                && !poolConfiguration.equals(otherPoolConfiguration)) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    this.formatConflictingParameterError(otherPoolConfiguration));
-        }
+    // @Override
+    // synchronized public void onEndpointPoolConfigurationSet(ModbusSlaveEndpoint otherEndpoint,
+    // @Nullable EndpointPoolConfiguration otherPoolConfiguration) {
+    // if (endpoint == null) {
+    // return;
+    // }
+    // EndpointPoolConfiguration poolConfiguration = this.poolConfiguration;
+    // if (poolConfiguration != null && otherEndpoint.equals(this.endpoint)
+    // && !poolConfiguration.equals(otherPoolConfiguration)) {
+    // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+    // this.formatConflictingParameterError(otherPoolConfiguration));
+    // }
+    //
+    // }
 
-    }
+    // private String formatConflictingParameterError(@Nullable EndpointPoolConfiguration otherPoolConfig) {
+    // return String.format(
+    // "Endpoint '%s' has conflicting parameters: parameters of this thing (%s '%s') %s are different from some other
+    // things parameter: %s. Ensure that all endpoints pointing to tcp slave '%s:%s' have same parameters.",
+    // endpoint, thing.getUID(), this.thing.getLabel(), this.poolConfiguration, otherPoolConfig,
+    // Optional.ofNullable(this.endpoint).map(e -> e.getAddress()).orElse("<null>"),
+    // Optional.ofNullable(this.endpoint).map(e -> String.valueOf(e.getPort())).orElse("<null>"));
+    // }
 
-    private String formatConflictingParameterError(@Nullable EndpointPoolConfiguration otherPoolConfig) {
-        return String.format(
-                "Endpoint '%s' has conflicting parameters: parameters of this thing (%s '%s') %s are different from some other things parameter: %s. Ensure that all endpoints pointing to tcp slave '%s:%s' have same parameters.",
-                endpoint, thing.getUID(), this.thing.getLabel(), this.poolConfiguration, otherPoolConfig,
-                Optional.ofNullable(this.endpoint).map(e -> e.getAddress()).orElse("<null>"),
-                Optional.ofNullable(this.endpoint).map(e -> String.valueOf(e.getPort())).orElse("<null>"));
-    }
-
-    @Override
-    public int getSlaveId() {
-        if (config != null) {
-            return this.config.id;
-        } else {
-            throw new IllegalStateException("Not configured, but slave id is queried!");
-        }
-    }
+    // @Override
+    // public int getSlaveId() {
+    // if (config != null) {
+    // return this.config.id;
+    // } else {
+    // throw new IllegalStateException("Not configured, but slave id is queried!");
+    // }
+    // }
 
     @Override
     public ThingUID getUID() {
         return getThing().getUID();
-    }
-
-    @Override
-    public ModbusSlaveEndpoint asSlaveEndpoint() {
-        if (this.endpoint != null) {
-            return this.endpoint;
-        }
-
-        throw new RuntimeException("Modbus Slave Endpoint not configured");
-    }
-
-    @Override
-    public Supplier<ModbusManager> getManagerRef() {
-        return this.managerRef;
     }
 
     @Override
@@ -304,12 +253,9 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
     @Override
     public synchronized void dispose() {
         logger.debug("dispose()");
-        // if (this.poller != null) {
-        // this.poller.unregisterPollTask();
-        // }
-        // this.callbackDelegator.resetCache();
 
-        this.modbusPollers.dispose();
+        this.modbusHandler.dispose();
+
         this.channelsHandler.dispose();
 
         updateStatus(ThingStatus.OFFLINE);
@@ -352,7 +298,23 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
     }
 
     @Override
-    public ChannelsHandler getChannelsHandler() {
+    public void updateThingChannels(List<Channel> channels) {
+        Thing newThing = this.editThing().withChannels(channels).build();
+        this.updateThing(newThing);
+    }
+
+    @Override
+    public ChannelsCacheHandler getChannelsHandler() {
         return this.channelsHandler;
+    }
+
+    @Override
+    public ModbusHandler getModbusHandler() {
+        return this.modbusHandler;
+    }
+
+    @Override
+    public KitaHeatPump getKita() {
+        return this.kita;
     }
 }
