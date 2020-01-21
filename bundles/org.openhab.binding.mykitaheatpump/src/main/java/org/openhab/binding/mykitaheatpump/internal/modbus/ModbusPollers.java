@@ -70,9 +70,9 @@ public class ModbusPollers {
                     poller.length = newEndAddress - poller.start;
                 }
 
-                if (poller.length > 123) {
-                    throw new RuntimeException("poller.length troppo grande " + poller.length + " > 123 !");
-                }
+                // if (poller.length > 123) {
+                // throw new RuntimeException("poller.length troppo grande " + poller.length + " > 123 !");
+                // }
 
             }
             pollers.put(fnCode, poller);
@@ -179,6 +179,7 @@ public class ModbusPollers {
                 case pct:
                 case temperature_ro:
                 case temperature_rw:
+                case rps_ro:
                     return 0.1;
             }
         }
@@ -221,14 +222,17 @@ public class ModbusPollers {
             case _switch:
                 return ValueType.INT16;
             case dateTime:
-                return ValueType.INT16;
+                return ValueType.INT16; // TODO
+
             case number:
             case pct:
             case cop:
             case flow_ro:
             case temperature_ro:
             case temperature_rw:
+            case rps_ro:
                 return ValueType.INT16;
+
             case string:
                 throw new RuntimeException("invalid DataTypeEnum string!");
             default:

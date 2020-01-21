@@ -94,6 +94,9 @@ public class ChannelsBuilder {
             case cop:
                 ctypeUUID = channelsHandler.getChannelTypeUID("cop-ctype");
                 break;
+            case rps_ro:
+                ctypeUUID = channelsHandler.getChannelTypeUID("rps-ro-ctype");
+                break;
             default:
                 break;
 
@@ -109,12 +112,16 @@ public class ChannelsBuilder {
 
             case number:
                 return "Number";
+
             case temperature_ro:
             case temperature_rw:
                 return "Number:Temperature";
+
             case pct:
             case cop:
+            case rps_ro:
                 return "Number:Dimensionless";
+
             case flow_ro:
                 return "Number:VolumetricFlowRate";
 
