@@ -29,7 +29,6 @@ import org.openhab.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
 /**
  * Base interface for thing handlers of endpoint things
  *
- * @author Sami Salonen - Initial contribution
  *
  */
 @NonNullByDefault

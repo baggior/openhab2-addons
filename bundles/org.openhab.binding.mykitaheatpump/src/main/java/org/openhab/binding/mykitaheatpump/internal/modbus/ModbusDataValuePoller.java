@@ -18,10 +18,10 @@ class ModbusDataValuePoller {
     final @NonNull MyKitaHeatPumpThingHandler myThingHandler;
     // final @NonNull ModbusPollers modbusMasterService;
 
-    private final @NonNull ModbusReadFunctionCode functionCode;
+    final @NonNull ModbusReadFunctionCode functionCode;
 
     int start;
-    int length;
+    int length = 0;
 
     // ModbusMasterService modbusService;
 
@@ -31,7 +31,8 @@ class ModbusDataValuePoller {
 
     private final ReadCallback callback;
 
-    ModbusDataValuePoller(ModbusPollers modbusPollers, @NonNull ModbusReadFunctionCode functionCode, int start, int length) {
+    ModbusDataValuePoller(ModbusPollers modbusPollers, @NonNull ModbusReadFunctionCode functionCode, int start,
+            int length) {
 
         // this.modbusMasterService = modbusMasterService;
         this.myThingHandler = modbusPollers.myThingHandler;
@@ -110,9 +111,15 @@ class ModbusDataValuePoller {
         } else {
             logger.info("Registering polling with ModbusManager:\n function {}, start {}, length {}, refresh {}",
                     functionCode, start, length, config.refresh);
+
             myThingHandler.getManagerRef().get().registerRegularPoll(task, config.refresh, 0);
 
         }
+    }
+
+    @Override
+    public String toString() {
+        return "ModbusDataValuePoller [functionCode=" + functionCode + ", start=" + start + ", length=" + length + "]";
     }
 
 }

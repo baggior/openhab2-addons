@@ -179,11 +179,13 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
 
             this.configure();
 
-            List<Channel> channels = ChannelsBuilder.create(this.kita, this.channelsHandler).build();
+            List<Channel> channels = ChannelsBuilder.of(this.kita, this.channelsHandler).build();
             Thing newThing = this.editThing().withChannels(channels).build();
             this.updateThing(newThing);
 
-            channelsHandler.initialize();
+            if (this.config != null) {
+                channelsHandler.configure(this.config);
+            }
 
             @Nullable
             ModbusTCPSlaveEndpoint endpoint = this.endpoint;

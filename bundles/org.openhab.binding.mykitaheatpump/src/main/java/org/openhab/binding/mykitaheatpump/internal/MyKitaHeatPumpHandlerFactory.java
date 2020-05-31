@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.mykitaheatpump.internal;
 
-import static org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpBindingConstants.THING_TYPE_KITA_REGISTERS;
+import static org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpBindingConstants.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -24,6 +24,7 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
+import org.openhab.binding.mykitaheatpump.internal.test.handler.TestHandler;
 import org.openhab.io.transport.modbus.ModbusManager;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,7 +46,7 @@ public class MyKitaHeatPumpHandlerFactory extends BaseThingHandlerFactory {
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = new HashSet<>();
     static {
         SUPPORTED_THING_TYPES_UIDS.add(THING_TYPE_KITA_REGISTERS);
-
+        SUPPORTED_THING_TYPES_UIDS.add(THING_TYPE_TEST);
     }
 
     @NonNullByDefault({})
@@ -63,6 +64,9 @@ public class MyKitaHeatPumpHandlerFactory extends BaseThingHandlerFactory {
         if (THING_TYPE_KITA_REGISTERS.equals(thingTypeUID)) {
             logger.info("Thing created label: '{}', uuid: {}", thing.getLabel(), thingTypeUID);
             return new MyKitaHeatPumpHandler(thing, () -> manager);
+        } else if (THING_TYPE_TEST.equals(thingTypeUID)) {
+            logger.info("Thing TEST created label: '{}', uuid: {}", thing.getLabel(), thingTypeUID);
+            return new TestHandler(thing, () -> manager);
         }
 
         return null;

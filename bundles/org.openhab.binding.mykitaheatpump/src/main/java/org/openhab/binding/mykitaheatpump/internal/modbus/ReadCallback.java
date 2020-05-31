@@ -93,6 +93,7 @@ class ReadCallback implements ModbusReadCallback {
         }
         this.logger.debug("Thing {} received coils {} for request {}", this.modbusPollers.myThingHandler.getUID(),
                 coils, request);
+
         resetCommunicationError();
         // childCallbacks.forEach(handler -> handler.onBits(request, coils));
 
@@ -120,6 +121,7 @@ class ReadCallback implements ModbusReadCallback {
 
         this.logger.debug("Thing {} received error {} for request {}", this.modbusPollers.myThingHandler.getUID(),
                 error, request);
+
         // childCallbacks.forEach(handler -> handler.onError(request, error));
         this.modbusPollers.myThingHandler.updateThingStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                 String.format("Error with read: %s: %s", error.getClass().getName(), error.getMessage()));

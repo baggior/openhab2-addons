@@ -4,10 +4,18 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- Sample Thing Type -->
+	<!-- Sample Test Thing Type -->
+    <thing-type id="test">
+        <label>Test Thing</label>
+        <description>Sample Test thing for MyKitaHeatPump Binding</description>
+        <config-description-ref uri="mykitaheatpump:kita:cfg_descr"></config-description-ref>
+    
+    </thing-type>
+    
+    <!-- KITA thing type -->
 	<thing-type id="kita">
-		<label>MyKitaHeatPump Binding Thing: REGISTERS</label>
-		<description>Sample thing for MyKitaHeatPump Binding</description>
+		<label>Kita Thing</label>
+		<description>Thing for MyKitaHeatPump Binding</description>
 		<category>HVAC</category>
 
         <!-- CHANNELS -->
@@ -23,7 +31,7 @@
 <!--           </channel>           -->
 <!--         </channels> -->
 		
-		<config-description>
+		<config-description uri="mykitaheatpump:kita:cfg_descr">
 			<parameter name="host" type="text" required="true">
                 <label>IP Address or hostname</label>
                 <description>Network address of the device</description>
@@ -124,8 +132,8 @@
 	<!-- Sample Channel Type -->
 	<channel-type id="sample-channel">
 		<item-type>Number</item-type>
-		<label>MyKitaHeatPump Binding Channel</label>
-		<description>Sample channel for MyKitaHeatPump Binding</description>
+		<label>Test Channel</label>
+		<description>Sample numeric channel for Test thing MyKitaHeatPump Binding</description>
 	</channel-type>
 	
 	<channel-type id="temperature-ro-ctype">

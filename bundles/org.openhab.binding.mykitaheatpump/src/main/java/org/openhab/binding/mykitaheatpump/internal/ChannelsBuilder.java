@@ -15,49 +15,62 @@ import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.D
 
 @NonNullByDefault
 public class ChannelsBuilder {
-    final KitaHeatPump kita;
-    // final String thingUid;
-    final ChannelsHandler channelsHandler;
+    @Nullable
+    private KitaHeatPump kita;
+    private final ChannelsHandler channelsHandler;
 
-    ChannelsBuilder(KitaHeatPump kita, ChannelsHandler channelsHandler) {
-        this.kita = kita;
+    ChannelsBuilder(ChannelsHandler channelsHandler) {
         this.channelsHandler = channelsHandler;
         // this.thingUid = channelsHandler.thingHandler.getUID().getAsString();
     }
 
-    public static ChannelsBuilder create(KitaHeatPump kita, ChannelsHandler channelsHandler) {
-        ChannelsBuilder builder = new ChannelsBuilder(kita, channelsHandler);
+    public static ChannelsBuilder of(KitaHeatPump kita, ChannelsHandler channelsHandler) {
+        ChannelsBuilder builder = new ChannelsBuilder(channelsHandler);
+        builder.kita(kita);
+
         return builder;
+    }
+
+    public ChannelsBuilder kita(KitaHeatPump kita) {
+        this.kita = kita;
+        return this;
     }
 
     List<Channel> build() {
         List<Channel> ret = new ArrayList<Channel>();
+        if (this.kita != null) {
+            this.kita.getData().forEach((dataType, dataValue) -> {
+                // todo
+                String id = dataType.name;
+                String label = dataType.label;
+                DataTypeEnum type = dataType.type;
 
-        this.kita.getData().forEach((dataType, dataValue) -> {
-            // todo
-            String id = dataType.name;
-            String label = dataType.label;
-
-            ChannelUID channelUID = channelsHandler.getChannelUID(id);
-            String acceptedItemType = this.convertToItemType(dataType.type);
-
-            ChannelBuilder builder = ChannelBuilder.create(channelUID, acceptedItemType).withLabel(label);
-
-            ChannelTypeUID ctypeUUID = this.convertToChannelType(dataType.type);
-            if (ctypeUUID != null) {
-                builder.withType(ctypeUUID);
-            }
-
-            ChannelKind cKind = this.convertToChannelKind(dataType.type);
-            if (cKind != null) {
-                builder.withKind(cKind);
-            }
-
-            Channel ch = builder.build();
-            ret.add(ch);
-        });
+                Channel ch = this.buildChannel(id, label, type);
+                ret.add(ch);
+            });
+        }
 
         return ret;
+    }
+
+    private Channel buildChannel(String id, String label, DataTypeEnum type) {
+        ChannelUID channelUID = channelsHandler.getChannelUID(id);
+        String acceptedItemType = this.convertToItemType(type);
+
+        ChannelBuilder builder = ChannelBuilder.create(channelUID, acceptedItemType).withLabel(label);
+
+        ChannelTypeUID ctypeUUID = this.convertToChannelType(type);
+        if (ctypeUUID != null) {
+            builder.withType(ctypeUUID);
+        }
+
+        ChannelKind cKind = this.convertToChannelKind(type);
+        if (cKind != null) {
+            builder.withKind(cKind);
+        }
+
+        Channel ch = builder.build();
+        return ch;
     }
 
     private @Nullable ChannelKind convertToChannelKind(DataTypeEnum type) {

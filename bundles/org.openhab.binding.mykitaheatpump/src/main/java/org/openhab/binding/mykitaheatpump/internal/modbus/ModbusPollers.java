@@ -1,7 +1,9 @@
 package org.openhab.binding.mykitaheatpump.internal.modbus;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -29,13 +31,15 @@ import org.slf4j.LoggerFactory;
 @NonNullByDefault
 public class ModbusPollers {
 
+    private static final int MAX_POLLER_LENGTH = 120;
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     final KitaHeatPump kita;
     final MyKitaHeatPumpThingHandler myThingHandler;
 
     // final List<DataValuePoller> pollers = new ArrayList<DataValuePoller>();
-    final Map<ModbusReadFunctionCode, @Nullable ModbusDataValuePoller> pollers = new HashMap<ModbusReadFunctionCode, @Nullable ModbusDataValuePoller>();
+    final List<ModbusDataValuePoller> pollers = new ArrayList<ModbusDataValuePoller>();
 
     public ModbusPollers(KitaHeatPump kita, MyKitaHeatPumpThingHandler myThingHandler) {
 
@@ -46,14 +50,16 @@ public class ModbusPollers {
     public void initializePollers() {
         logger.debug("ModbusMasterService initialize pollers() ");
 
+        final Map<ModbusReadFunctionCode, @Nullable ModbusDataValuePoller> _tempPollers = new HashMap<ModbusReadFunctionCode, @Nullable ModbusDataValuePoller>();
+
         kita.getData().forEach((dataType, dataValue) -> {
-            // todo
+            // Todo
 
             RegisterTypeEnum register = dataType.register;
             int address = dataType.address;
 
             ModbusReadFunctionCode fnCode = this.convertToModbusReadFunctionCode(register);
-            ModbusDataValuePoller poller = pollers.get(fnCode);
+            ModbusDataValuePoller poller = _tempPollers.get(fnCode);
             if (poller == null) {
                 int startAddress = address;
                 int length = 1;
@@ -70,19 +76,59 @@ public class ModbusPollers {
                     poller.length = newEndAddress - poller.start;
                 }
 
-                // if (poller.length > 123) {
-                // throw new RuntimeException("poller.length troppo grande " + poller.length + " > 123 !");
-                // }
-
             }
-            pollers.put(fnCode, poller);
+            _tempPollers.put(fnCode, poller);
         });
 
-        pollers.values().forEach((poller) -> {
+        // build pollers map
+        _tempPollers.values().forEach((poller) -> {
             if (poller != null) {
-                poller.registerPollTask();
+                if (poller.length > MAX_POLLER_LENGTH) {
+                    this.logger.info(
+                            "Split poller {} \npoller.length troppo grande: {}>" + MAX_POLLER_LENGTH
+                                    + " => Superata la dimenzione massima di 256byte per un pacchetto MODBUS",
+                            poller, poller.length);
+                    // throw new RuntimeException("poller.length troppo grande " + poller.length
+                    // + " > 120! => Superata la dimenzione massima di 256byte per un pacchetto MODBUS");
+
+                    // split poller
+                    List<ModbusDataValuePoller> splittedPollers = this.splitPoller(poller, MAX_POLLER_LENGTH);
+                    this.logger.debug("Split poller {} to\n {}>", poller, splittedPollers);
+
+                    pollers.addAll(splittedPollers);
+
+                } else {
+                    pollers.add(poller);
+                }
             }
         });
+
+        // start pollTask
+        pollers.forEach((poller) -> {
+            poller.registerPollTask();
+        });
+    }
+
+    private List<ModbusDataValuePoller> splitPoller(final ModbusDataValuePoller poller, final int maxLength) {
+
+        // split poller ricorsivo
+
+        List<ModbusDataValuePoller> ret = new ArrayList<ModbusDataValuePoller>();
+
+        if (poller.length > maxLength) {
+            ModbusDataValuePoller firstPoller = new ModbusDataValuePoller(this, poller.functionCode, poller.start,
+                    MAX_POLLER_LENGTH);
+            ModbusDataValuePoller nextPoller = new ModbusDataValuePoller(this, poller.functionCode,
+                    poller.start + MAX_POLLER_LENGTH, poller.length - MAX_POLLER_LENGTH);
+
+            ret.add(firstPoller);
+            ret.addAll(this.splitPoller(nextPoller, maxLength));
+        } else {
+            ret.add(poller);
+        }
+
+        return ret;
+
     }
 
     private ModbusReadFunctionCode convertToModbusReadFunctionCode(RegisterTypeEnum register) {
@@ -103,12 +149,23 @@ public class ModbusPollers {
 
     public void dispose() {
 
-        pollers.values().forEach(poller -> {
-            if (poller != null) {
-                poller.unregisterPollTask();
-            }
+        pollers.forEach(poller -> {
+            poller.unregisterPollTask();
         });
         pollers.clear();
+
+        this.disposePollers();
+    }
+
+    private void disposePollers() {
+        this.myThingHandler.getManagerRef().get().getRegisteredRegularPolls().forEach(pollTask -> {
+            ModbusReadRequestBlueprint requestBlueprint = pollTask.getRequest();
+
+            logger.info("Unregistering polling from ModbusManager:\n unitId {}, function {}, start {}, length {}",
+                    requestBlueprint.getUnitID(), requestBlueprint.getFunctionCode(), requestBlueprint.getReference(),
+                    requestBlueprint.getDataLength());
+            this.myThingHandler.getManagerRef().get().unregisterRegularPoll(pollTask);
+        });
 
     }
 
@@ -127,24 +184,28 @@ public class ModbusPollers {
             int readIndex = type.address;
             int pollStart = request.getReference();
             int extractIndex = readIndex - pollStart;
+            int dataLen = request.getDataLength();
 
-            ModbusConstants.ValueType readValueType = this.convertToValueType(type.type);
+            if (extractIndex > 0 && extractIndex < dataLen) {
 
-            Optional<DecimalType> numericStateOpt = ModbusBitUtilities.extractStateFromRegisters(registers,
-                    extractIndex, readValueType);
+                ModbusConstants.ValueType readValueType = this.convertToValueType(type.type);
 
-            boolean boolValue = (numericStateOpt.isPresent()) && (!numericStateOpt.get().equals(DecimalType.ZERO));
+                Optional<DecimalType> numericStateOpt = ModbusBitUtilities.extractStateFromRegisters(registers,
+                        extractIndex, readValueType);
 
-            String id = type.name;
-            ChannelUID channelUID = this.myThingHandler.getChannelsHandler().getChannelUID(id);
-            if (numericStateOpt.isPresent()) {
-                DecimalType numericState = numericStateOpt.get();
-                DecimalType numericStateConverted = this.convertState(type, numericState);
+                boolean boolValue = (numericStateOpt.isPresent()) && (!numericStateOpt.get().equals(DecimalType.ZERO));
 
-                ret.put(channelUID, numericStateConverted);
-            } else {
-                ret.put(channelUID, UnDefType.UNDEF);
+                String id = type.name;
+                ChannelUID channelUID = this.myThingHandler.getChannelsHandler().getChannelUID(id);
+                if (numericStateOpt.isPresent()) {
+                    DecimalType numericState = numericStateOpt.get();
+                    DecimalType numericStateConverted = this.convertState(type, numericState);
 
+                    ret.put(channelUID, numericStateConverted);
+                } else {
+                    ret.put(channelUID, UnDefType.UNDEF);
+
+                }
             }
 
         });

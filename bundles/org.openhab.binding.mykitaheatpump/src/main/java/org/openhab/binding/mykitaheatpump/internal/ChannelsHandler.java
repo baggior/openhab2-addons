@@ -11,6 +11,12 @@ import org.eclipse.smarthome.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Manages OpenHab Thing Channels and cache
+ * 
+ * @author utente
+ *
+ */
 @NonNullByDefault
 public class ChannelsHandler {
 
@@ -28,12 +34,10 @@ public class ChannelsHandler {
         this.thingHandler = myKitaHeatPumpHandler;
     }
 
-    void initialize() {
-        logger.debug("ChannelsHandler intialize..");
-        MyKitaHeatPumpConfiguration config = this.thingHandler.getConfiguration();
-        if (config != null) {
-            updateUnchangedValuesEveryMillis = config.updateUnchangedValuesEveryMillis;
-        }
+    void configure(MyKitaHeatPumpConfiguration configuration) {
+        logger.debug("ChannelsHandler configuration..");
+        updateUnchangedValuesEveryMillis = configuration.updateUnchangedValuesEveryMillis;
+
     }
 
     public ChannelUID getChannelUID(String channelID) {
