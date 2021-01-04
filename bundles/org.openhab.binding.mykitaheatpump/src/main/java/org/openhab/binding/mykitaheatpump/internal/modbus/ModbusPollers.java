@@ -9,22 +9,22 @@ import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.library.types.DecimalType;
-import org.eclipse.smarthome.core.thing.ChannelUID;
-import org.eclipse.smarthome.core.types.State;
-import org.eclipse.smarthome.core.types.UnDefType;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpThingHandler;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.DataTypeEnum;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.RegisterTypeEnum;
-import org.openhab.io.transport.modbus.BitArray;
-import org.openhab.io.transport.modbus.ModbusBitUtilities;
-import org.openhab.io.transport.modbus.ModbusConstants;
-import org.openhab.io.transport.modbus.ModbusConstants.ValueType;
-import org.openhab.io.transport.modbus.ModbusReadFunctionCode;
-import org.openhab.io.transport.modbus.ModbusReadRequestBlueprint;
-import org.openhab.io.transport.modbus.ModbusRegisterArray;
+import org.openhab.core.io.transport.modbus.BitArray;
+import org.openhab.core.io.transport.modbus.ModbusBitUtilities;
+import org.openhab.core.io.transport.modbus.ModbusConstants;
+import org.openhab.core.io.transport.modbus.ModbusConstants.ValueType;
+import org.openhab.core.io.transport.modbus.ModbusReadFunctionCode;
+import org.openhab.core.io.transport.modbus.ModbusReadRequestBlueprint;
+import org.openhab.core.io.transport.modbus.ModbusRegisterArray;
+import org.openhab.core.library.types.DecimalType;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.types.State;
+import org.openhab.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,35 +176,38 @@ public class ModbusPollers {
 
         this.kita.getData().forEach((type, value) -> {
 
-            ModbusReadFunctionCode fnCode = this.convertToModbusReadFunctionCode(type.register);
-            if (!fnCode.equals(request.getFunctionCode())) {
-                return;
-            }
+            String id = type.name;
+            ChannelUID channelUID = this.myThingHandler.getChannelsHandler().getChannelUID(id);
+            if (channelUID != null) {
 
-            int readIndex = type.address;
-            int pollStart = request.getReference();
-            int extractIndex = readIndex - pollStart;
-            int dataLen = request.getDataLength();
+                ModbusReadFunctionCode fnCode = this.convertToModbusReadFunctionCode(type.register);
+                if (!fnCode.equals(request.getFunctionCode())) {
+                    return;
+                }
 
-            if (extractIndex > 0 && extractIndex < dataLen) {
+                int readIndex = type.address;
+                int pollStart = request.getReference();
+                int extractIndex = readIndex - pollStart;
+                int dataLen = request.getDataLength();
 
-                ModbusConstants.ValueType readValueType = this.convertToValueType(type.type);
+                if (extractIndex > 0 && extractIndex < dataLen) {
 
-                Optional<DecimalType> numericStateOpt = ModbusBitUtilities.extractStateFromRegisters(registers,
-                        extractIndex, readValueType);
+                    ModbusConstants.ValueType readValueType = this.convertToValueType(type.type);
 
-                boolean boolValue = (numericStateOpt.isPresent()) && (!numericStateOpt.get().equals(DecimalType.ZERO));
+                    Optional<DecimalType> numericStateOpt = ModbusBitUtilities.extractStateFromRegisters(registers,
+                            extractIndex, readValueType);
 
-                String id = type.name;
-                ChannelUID channelUID = this.myThingHandler.getChannelsHandler().getChannelUID(id);
-                if (numericStateOpt.isPresent()) {
-                    DecimalType numericState = numericStateOpt.get();
-                    DecimalType numericStateConverted = this.convertState(type, numericState);
+                    boolean boolValue = (numericStateOpt.isPresent())
+                            && (!numericStateOpt.get().equals(DecimalType.ZERO));
 
-                    ret.put(channelUID, numericStateConverted);
-                } else {
-                    ret.put(channelUID, UnDefType.UNDEF);
+                    if (numericStateOpt.isPresent()) {
+                        DecimalType numericState = numericStateOpt.get();
+                        DecimalType numericStateConverted = this.convertState(type, numericState);
 
+                        ret.put(channelUID, numericStateConverted);
+                    } else {
+                        ret.put(channelUID, UnDefType.UNDEF);
+                    }
                 }
             }
 
@@ -252,22 +255,25 @@ public class ModbusPollers {
 
         this.kita.getData().forEach((type, value) -> {
 
-            ModbusReadFunctionCode fnCode = this.convertToModbusReadFunctionCode(type.register);
-            if (!fnCode.equals(request.getFunctionCode())) {
-                return;
-            }
-
-            int readIndex = type.address;
-            int pollStart = request.getReference();
-            int extractIndex = readIndex - pollStart;
-
-            boolean boolValue = bitsarray.getBit(extractIndex);
-
-            DecimalType numericState = boolValue ? new DecimalType(BigDecimal.ONE) : DecimalType.ZERO;
-
             String label = type.name;
             ChannelUID channelUID = this.myThingHandler.getChannelsHandler().getChannelUID(label);
-            ret.put(channelUID, numericState);
+            if (channelUID != null) {
+
+                ModbusReadFunctionCode fnCode = this.convertToModbusReadFunctionCode(type.register);
+                if (!fnCode.equals(request.getFunctionCode())) {
+                    return;
+                }
+
+                int readIndex = type.address;
+                int pollStart = request.getReference();
+                int extractIndex = readIndex - pollStart;
+
+                boolean boolValue = bitsarray.getBit(extractIndex);
+
+                DecimalType numericState = boolValue ? new DecimalType(BigDecimal.ONE) : DecimalType.ZERO;
+
+                ret.put(channelUID, numericState);
+            }
 
         });
 

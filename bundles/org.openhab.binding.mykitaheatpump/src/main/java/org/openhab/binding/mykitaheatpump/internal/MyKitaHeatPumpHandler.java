@@ -18,28 +18,28 @@ import java.util.function.Supplier;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.thing.Channel;
-import org.eclipse.smarthome.core.thing.ChannelUID;
-import org.eclipse.smarthome.core.thing.Thing;
-import org.eclipse.smarthome.core.thing.ThingStatus;
-import org.eclipse.smarthome.core.thing.ThingStatusDetail;
-import org.eclipse.smarthome.core.thing.ThingStatusInfo;
-import org.eclipse.smarthome.core.thing.ThingUID;
-import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
-import org.eclipse.smarthome.core.types.Command;
-import org.eclipse.smarthome.core.types.RefreshType;
-import org.eclipse.smarthome.core.types.State;
 import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusPollers;
 import org.openhab.binding.mykitaheatpump.internal.modbus.ModbusWriter;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
-import org.openhab.io.transport.modbus.ModbusManager;
-import org.openhab.io.transport.modbus.ModbusManagerListener;
-import org.openhab.io.transport.modbus.ModbusResponse;
-import org.openhab.io.transport.modbus.ModbusWriteCallback;
-import org.openhab.io.transport.modbus.ModbusWriteRequestBlueprint;
-import org.openhab.io.transport.modbus.endpoint.EndpointPoolConfiguration;
-import org.openhab.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
-import org.openhab.io.transport.modbus.endpoint.ModbusTCPSlaveEndpoint;
+import org.openhab.core.io.transport.modbus.AsyncModbusWriteResult;
+import org.openhab.core.io.transport.modbus.ModbusManager;
+import org.openhab.core.io.transport.modbus.ModbusResponse;
+import org.openhab.core.io.transport.modbus.ModbusWriteCallback;
+import org.openhab.core.io.transport.modbus.ModbusWriteRequestBlueprint;
+import org.openhab.core.io.transport.modbus.endpoint.EndpointPoolConfiguration;
+import org.openhab.core.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
+import org.openhab.core.io.transport.modbus.endpoint.ModbusTCPSlaveEndpoint;
+import org.openhab.core.thing.Channel;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.Thing;
+import org.openhab.core.thing.ThingStatus;
+import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.ThingStatusInfo;
+import org.openhab.core.thing.ThingUID;
+import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.types.Command;
+import org.openhab.core.types.RefreshType;
+import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +50,7 @@ import org.slf4j.LoggerFactory;
  * @author Marco Tombesi - Initial contribution
  */
 @NonNullByDefault
-public class MyKitaHeatPumpHandler extends BaseThingHandler
-        implements ModbusManagerListener, MyKitaHeatPumpThingHandler {
+public class MyKitaHeatPumpHandler extends BaseThingHandler implements MyKitaHeatPumpThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -133,6 +132,12 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
                         if (command instanceof State) {
                             MyKitaHeatPumpHandler.this.tryUpdateChannelState(channelUID, ((State) command));
                         }
+
+                    }
+
+                    @Override
+                    public void handle(AsyncModbusWriteResult result) {
+                        // TODO Auto-generated method stub
 
                     }
 
@@ -355,4 +360,5 @@ public class MyKitaHeatPumpHandler extends BaseThingHandler
     public ChannelsHandler getChannelsHandler() {
         return this.channelsHandler;
     }
+
 }

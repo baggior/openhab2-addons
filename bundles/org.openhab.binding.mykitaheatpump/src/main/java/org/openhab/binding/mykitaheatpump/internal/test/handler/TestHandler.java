@@ -7,42 +7,41 @@ import java.util.function.Supplier;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.thing.Channel;
-import org.eclipse.smarthome.core.thing.ChannelUID;
-import org.eclipse.smarthome.core.thing.Thing;
-import org.eclipse.smarthome.core.thing.ThingStatus;
-import org.eclipse.smarthome.core.thing.ThingStatusDetail;
-import org.eclipse.smarthome.core.thing.ThingStatusInfo;
-import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
-import org.eclipse.smarthome.core.thing.binding.builder.ChannelBuilder;
-import org.eclipse.smarthome.core.thing.type.ChannelTypeUID;
-import org.eclipse.smarthome.core.types.Command;
-import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.mykitaheatpump.internal.ModbusConfigurationException;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpBindingConstants;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpConfiguration;
-import org.openhab.io.transport.modbus.BasicModbusReadRequestBlueprint;
-import org.openhab.io.transport.modbus.BasicPollTaskImpl;
-import org.openhab.io.transport.modbus.BitArray;
-import org.openhab.io.transport.modbus.ModbusManager;
-import org.openhab.io.transport.modbus.ModbusManagerListener;
-import org.openhab.io.transport.modbus.ModbusReadCallback;
-import org.openhab.io.transport.modbus.ModbusReadFunctionCode;
-import org.openhab.io.transport.modbus.ModbusReadRequestBlueprint;
-import org.openhab.io.transport.modbus.ModbusRegisterArray;
-import org.openhab.io.transport.modbus.PollTask;
-import org.openhab.io.transport.modbus.endpoint.EndpointPoolConfiguration;
-import org.openhab.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
-import org.openhab.io.transport.modbus.endpoint.ModbusTCPSlaveEndpoint;
+import org.openhab.core.io.transport.modbus.AsyncModbusReadResult;
+import org.openhab.core.io.transport.modbus.BitArray;
+import org.openhab.core.io.transport.modbus.ModbusManager;
+import org.openhab.core.io.transport.modbus.ModbusReadCallback;
+import org.openhab.core.io.transport.modbus.ModbusReadFunctionCode;
+import org.openhab.core.io.transport.modbus.ModbusReadRequestBlueprint;
+import org.openhab.core.io.transport.modbus.ModbusRegisterArray;
+import org.openhab.core.io.transport.modbus.PollTask;
+import org.openhab.core.io.transport.modbus.endpoint.EndpointPoolConfiguration;
+import org.openhab.core.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
+import org.openhab.core.io.transport.modbus.endpoint.ModbusTCPSlaveEndpoint;
+import org.openhab.core.io.transport.modbus.internal.BasicPollTask;
+import org.openhab.core.thing.Channel;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.Thing;
+import org.openhab.core.thing.ThingStatus;
+import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.ThingStatusInfo;
+import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.thing.binding.builder.ChannelBuilder;
+import org.openhab.core.thing.type.ChannelTypeUID;
+import org.openhab.core.types.Command;
+import org.openhab.core.types.RefreshType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
 
 */
-public class TestHandler extends BaseThingHandler implements ModbusManagerListener, ModbusReadCallback { // ,
-                                                                                                         // MyKitaHeatPumpThingHandler
-                                                                                                         // {
+public class TestHandler extends BaseThingHandler implements ModbusReadCallback { // ,
+                                                                                  // MyKitaHeatPumpThingHandler
+                                                                                  // {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -138,10 +137,10 @@ public class TestHandler extends BaseThingHandler implements ModbusManagerListen
         final int length = 123; // max 123 uint Modbus.MAX_MESSAGE_LENGTH =256 bytes
 
         if (this.config != null) {
-            BasicModbusReadRequestBlueprint request = new BasicModbusReadRequestBlueprint(this.config.id, functionCode,
-                    start, length, this.config.maxTries);
+            ModbusReadRequestBlueprint request = new ModbusReadRequestBlueprint(this.config.id, functionCode, start,
+                    length, this.config.maxTries);
             if (this.endpoint != null) {
-                PollTask task = new BasicPollTaskImpl(this.endpoint, request, this);
+                PollTask task = new BasicPollTask(this.endpoint, request, this);
 
                 if (this.config.refresh <= 0L) {
                     logger.debug("Not registering polling with ModbusManager since refresh disabled");
@@ -312,5 +311,11 @@ public class TestHandler extends BaseThingHandler implements ModbusManagerListen
                 && ThingStatusDetail.COMMUNICATION_ERROR.equals(statusInfo.getStatusDetail())) {
             this.updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE, null);
         }
+    }
+
+    @Override
+    public void handle(AsyncModbusReadResult result) {
+        // TODO Auto-generated method stub
+
     }
 }

@@ -1,6 +1,5 @@
 package org.openhab.binding.mykitaheatpump.internal.models;
 
-<<<<<<< Upstream, based on origin/2.5.x
 import java.util.HashMap;
 
 import org.eclipse.jdt.annotation.NonNull;

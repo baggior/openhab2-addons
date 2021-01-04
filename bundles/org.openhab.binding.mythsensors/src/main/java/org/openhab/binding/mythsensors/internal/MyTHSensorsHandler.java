@@ -16,17 +16,17 @@ import static org.openhab.binding.mythsensors.internal.MyTHSensorsBindingConstan
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.thing.ChannelUID;
-import org.eclipse.smarthome.core.thing.Thing;
-import org.eclipse.smarthome.core.thing.ThingStatus;
-import org.eclipse.smarthome.core.thing.ThingStatusDetail;
-import org.eclipse.smarthome.core.thing.ThingStatusInfo;
-import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
-import org.eclipse.smarthome.core.types.Command;
-import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.mythsensors.internal.modbus.ModbusMasterService;
 import org.openhab.binding.mythsensors.internal.modbus.ModbusPollers;
-import org.openhab.io.transport.modbus.ModbusManager;
+import org.openhab.core.io.transport.modbus.ModbusManager;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.Thing;
+import org.openhab.core.thing.ThingStatus;
+import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.ThingStatusInfo;
+import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.types.Command;
+import org.openhab.core.types.RefreshType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

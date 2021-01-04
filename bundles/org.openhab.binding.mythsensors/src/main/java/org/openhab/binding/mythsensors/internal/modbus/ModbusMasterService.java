@@ -9,20 +9,20 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.thing.ChannelUID;
-import org.eclipse.smarthome.core.types.State;
 import org.openhab.binding.mythsensors.internal.models.ThSensor;
-import org.openhab.io.transport.modbus.BasicModbusReadRequestBlueprint;
-import org.openhab.io.transport.modbus.BasicPollTaskImpl;
-import org.openhab.io.transport.modbus.BitArray;
-import org.openhab.io.transport.modbus.ModbusManager;
-import org.openhab.io.transport.modbus.ModbusReadCallback;
-import org.openhab.io.transport.modbus.ModbusReadFunctionCode;
-import org.openhab.io.transport.modbus.ModbusReadRequestBlueprint;
-import org.openhab.io.transport.modbus.ModbusRegisterArray;
-import org.openhab.io.transport.modbus.PollTask;
-import org.openhab.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
-import org.openhab.io.transport.modbus.endpoint.ModbusTCPSlaveEndpoint;
+import org.openhab.core.io.transport.modbus.AsyncModbusReadResult;
+import org.openhab.core.io.transport.modbus.BitArray;
+import org.openhab.core.io.transport.modbus.ModbusManager;
+import org.openhab.core.io.transport.modbus.ModbusReadCallback;
+import org.openhab.core.io.transport.modbus.ModbusReadFunctionCode;
+import org.openhab.core.io.transport.modbus.ModbusReadRequestBlueprint;
+import org.openhab.core.io.transport.modbus.ModbusRegisterArray;
+import org.openhab.core.io.transport.modbus.PollTask;
+import org.openhab.core.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
+import org.openhab.core.io.transport.modbus.endpoint.ModbusTCPSlaveEndpoint;
+import org.openhab.core.io.transport.modbus.internal.BasicPollTask;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,12 +159,12 @@ public class ModbusMasterService {
 
         CountDownLatch callbackCalled = new CountDownLatch(1);
 
-        BasicModbusReadRequestBlueprint request = new BasicModbusReadRequestBlueprint(slaveUnitId,
+        ModbusReadRequestBlueprint request = new ModbusReadRequestBlueprint(slaveUnitId,
                 this.convertToModbusReadFunctionCode(type), start, length, maxTries);
 
         final ModbusOneTimeResponse ret = new ModbusOneTimeResponse();
 
-        PollTask task = new BasicPollTaskImpl(this.modbusSlaveEndpoint, request, new ModbusReadCallback() {
+        PollTask task = new BasicPollTask(this.modbusSlaveEndpoint, request, new ModbusReadCallback() {
 
             @Override
             public void onRegisters(ModbusReadRequestBlueprint request, ModbusRegisterArray registers) {
@@ -189,6 +189,12 @@ public class ModbusMasterService {
                 ret.bitsarray = bits;
                 callbackCalled.countDown();
             }
+
+            @Override
+            public void handle(AsyncModbusReadResult result) {
+                // TODO Auto-generated method stub
+
+            }
         });
 
         Future<?> f = this.modbusManager.submitOneTimePoll(task);
@@ -208,10 +214,13 @@ public class ModbusMasterService {
         ModbusOneTimeResponse response = this.performOneTimeRequest(unitId, RegisterTypeEnum.holding, 200, 5);
 
         if (response.registers != null) {
+            ModbusRegisterArray registers = response.registers;
             ThSensor thsensor = new ThSensor();
-            thsensor.moisture = response.registers.getRegister(0).getValue();
-            thsensor.temperature = response.registers.getRegister(3).getValue();
-            thsensor.dewpoint = response.registers.getRegister(4).getValue();
+
+            thsensor.moisture = registers.getRegister(0);
+            thsensor.temperature = registers.getRegister(3);
+            thsensor.dewpoint = registers.getRegister(4);
+
             return thsensor;
         } else if (response.error != null) {
             logger.debug(response.error.getLocalizedMessage());

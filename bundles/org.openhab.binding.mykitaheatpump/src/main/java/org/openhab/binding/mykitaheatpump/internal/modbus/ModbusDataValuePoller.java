@@ -4,10 +4,10 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpConfiguration;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpThingHandler;
-import org.openhab.io.transport.modbus.BasicModbusReadRequestBlueprint;
-import org.openhab.io.transport.modbus.BasicPollTaskImpl;
-import org.openhab.io.transport.modbus.ModbusReadFunctionCode;
-import org.openhab.io.transport.modbus.PollTask;
+import org.openhab.core.io.transport.modbus.ModbusReadFunctionCode;
+import org.openhab.core.io.transport.modbus.ModbusReadRequestBlueprint;
+import org.openhab.core.io.transport.modbus.PollTask;
+import org.openhab.core.io.transport.modbus.internal.BasicPollTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,11 +98,11 @@ class ModbusDataValuePoller {
             throw new RuntimeException("MyKitaHeatPumpConfiguration cannot be null!");
         }
 
-        BasicModbusReadRequestBlueprint request = new BasicModbusReadRequestBlueprint(config.id, this.functionCode,
-                this.start, this.length, config.maxTries);
+        ModbusReadRequestBlueprint request = new ModbusReadRequestBlueprint(config.id, this.functionCode, this.start,
+                this.length, config.maxTries);
 
         @NonNull
-        PollTask task = new BasicPollTaskImpl(myThingHandler.asSlaveEndpoint(), request, this.callback);
+        PollTask task = new BasicPollTask(myThingHandler.asSlaveEndpoint(), request, this.callback);
         this.pollTask = task;
 
         if (config.refresh <= 0L) {

@@ -4,10 +4,10 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.mythsensors.internal.MyTHSensorsConfiguration;
 import org.openhab.binding.mythsensors.internal.MyTHSensorsHandler;
-import org.openhab.io.transport.modbus.BasicModbusReadRequestBlueprint;
-import org.openhab.io.transport.modbus.BasicPollTaskImpl;
-import org.openhab.io.transport.modbus.ModbusReadFunctionCode;
-import org.openhab.io.transport.modbus.PollTask;
+import org.openhab.core.io.transport.modbus.ModbusReadFunctionCode;
+import org.openhab.core.io.transport.modbus.ModbusReadRequestBlueprint;
+import org.openhab.core.io.transport.modbus.PollTask;
+import org.openhab.core.io.transport.modbus.internal.BasicPollTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,11 +104,11 @@ class ModbusDataValuePoller {
             throw new RuntimeException("MyKitaHeatPumpConfiguration cannot be null!");
         }
 
-        BasicModbusReadRequestBlueprint request = new BasicModbusReadRequestBlueprint(config.unitId, this.functionCode,
+        ModbusReadRequestBlueprint request = new ModbusReadRequestBlueprint(config.unitId, this.functionCode,
                 this.start, this.length, modbusPollers.maxTries);
 
         @NonNull
-        PollTask task = new BasicPollTaskImpl(modbusMasterService.getSlaveEndpoint(), request, this.callback);
+        PollTask task = new BasicPollTask(modbusMasterService.getSlaveEndpoint(), request, this.callback);
         this.pollTask = task;
 
         if (config.refresh <= 0) {

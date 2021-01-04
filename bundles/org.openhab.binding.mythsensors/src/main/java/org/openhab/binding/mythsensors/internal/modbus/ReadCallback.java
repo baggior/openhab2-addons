@@ -1,19 +1,19 @@
 package org.openhab.binding.mythsensors.internal.modbus;
 
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.thing.ChannelUID;
-import org.eclipse.smarthome.core.thing.ThingStatus;
-import org.eclipse.smarthome.core.thing.ThingStatusDetail;
-import org.eclipse.smarthome.core.thing.ThingStatusInfo;
-import org.eclipse.smarthome.core.thing.ThingUID;
-import org.eclipse.smarthome.core.types.State;
-import org.openhab.io.transport.modbus.BitArray;
-import org.openhab.io.transport.modbus.ModbusReadCallback;
-import org.openhab.io.transport.modbus.ModbusReadRequestBlueprint;
-import org.openhab.io.transport.modbus.ModbusRegisterArray;
+import org.openhab.core.io.transport.modbus.AsyncModbusReadResult;
+import org.openhab.core.io.transport.modbus.BitArray;
+import org.openhab.core.io.transport.modbus.ModbusReadCallback;
+import org.openhab.core.io.transport.modbus.ModbusReadRequestBlueprint;
+import org.openhab.core.io.transport.modbus.ModbusRegisterArray;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.ThingStatus;
+import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.ThingStatusInfo;
+import org.openhab.core.thing.ThingUID;
+import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -157,17 +157,6 @@ class ReadCallback implements ModbusReadCallback {
         return getThingUID().hashCode();
     }
 
-    @SuppressWarnings("unchecked")
-    private @Nullable AtomicStampedKeyValue<ModbusReadRequestBlueprint, Object> getLastData() {
-        try {
-            return (AtomicStampedKeyValue<ModbusReadRequestBlueprint, Object>) Stream
-                    .of(lastRegisters, lastCoils, lastError).max(AtomicStampedKeyValue::compare).get();
-        } catch (NullPointerException e) {
-            // max (latest) element is null -> all data are null
-            return null;
-        }
-    }
-
     /**
      * Update children data if data is fresh enough
      *
@@ -209,5 +198,11 @@ class ReadCallback implements ModbusReadCallback {
         lastRegisters = null;
         lastCoils = null;
         lastError = null;
+    }
+
+    @Override
+    public void handle(AsyncModbusReadResult result) {
+        // TODO Auto-generated method stub
+
     }
 }

@@ -5,15 +5,15 @@ import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.thing.ChannelUID;
-import org.eclipse.smarthome.core.thing.type.ChannelTypeUID;
-import org.eclipse.smarthome.core.types.State;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.type.ChannelTypeUID;
+import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Manages OpenHab Thing Channels and cache
- * 
+ *
  * @author utente
  *
  */
@@ -40,11 +40,11 @@ public class ChannelsHandler {
 
     }
 
-    public ChannelUID getChannelUID(String channelID) {
+    public @Nullable ChannelUID getChannelUID(String channelID) {
         return channelCache.computeIfAbsent(channelID, id -> new ChannelUID(thingHandler.getUID(), id));
     }
 
-    public ChannelTypeUID getChannelTypeUID(String channelTypeID) {
+    public @Nullable ChannelTypeUID getChannelTypeUID(String channelTypeID) {
         return channelTypeCache.computeIfAbsent(channelTypeID,
                 id -> new ChannelTypeUID(MyKitaHeatPumpBindingConstants.BINDING_ID, id));
     }

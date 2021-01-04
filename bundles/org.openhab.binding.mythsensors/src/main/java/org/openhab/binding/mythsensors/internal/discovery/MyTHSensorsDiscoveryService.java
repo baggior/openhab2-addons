@@ -9,14 +9,14 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
-import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
-import org.eclipse.smarthome.config.discovery.DiscoveryService;
-import org.eclipse.smarthome.core.thing.ThingTypeUID;
-import org.eclipse.smarthome.core.thing.ThingUID;
 import org.openhab.binding.mythsensors.internal.modbus.ModbusMasterService;
 import org.openhab.binding.mythsensors.internal.models.ThSensor;
-import org.openhab.io.transport.modbus.ModbusManager;
+import org.openhab.core.config.discovery.AbstractDiscoveryService;
+import org.openhab.core.config.discovery.DiscoveryResultBuilder;
+import org.openhab.core.config.discovery.DiscoveryService;
+import org.openhab.core.io.transport.modbus.ModbusManager;
+import org.openhab.core.thing.ThingTypeUID;
+import org.openhab.core.thing.ThingUID;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,6 +34,9 @@ public class MyTHSensorsDiscoveryService extends AbstractDiscoveryService {
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_THSENSOR);
     private static final int DISCOVERY_TIMEOUT_SECONDS = 10;
+    private static final Object DEFAULT_PORT_PARAM_VALUE_STR = "502";
+    private static final Object DEFAULT_MINUNITID_PARAM_VALUE_STR = "1";
+    private static final Object DEFAULT_MAXUNITID_PARAM_VALUE_STR = "100";
 
     private String host;
     private Integer port;
@@ -42,7 +45,7 @@ public class MyTHSensorsDiscoveryService extends AbstractDiscoveryService {
 
     private ModbusManager manager;
 
-    Map<@NonNull String, @Nullable Object> configProperties;
+    Map<String, Object> configProperties;
 
     public MyTHSensorsDiscoveryService() {
         super(SUPPORTED_THING_TYPES_UIDS, DISCOVERY_TIMEOUT_SECONDS);
@@ -84,15 +87,17 @@ public class MyTHSensorsDiscoveryService extends AbstractDiscoveryService {
 
     @Override
     @Activate
-    protected void activate(@Nullable Map<@NonNull String, @Nullable Object> configProperties) {
+    protected void activate(@Nullable Map<@NonNull String, @NonNull Object> configProperties) {
         // TODO Auto-generated method stub
         logger.debug("MyTHSensorsDiscoveryService.activate configProperties \n\t {}", configProperties);
 
         if (configProperties != null) {
             this.host = (String) configProperties.get("host");
-            this.port = Integer.decode((String) configProperties.get("port"));
-            this.minId = Integer.decode((String) configProperties.get("minUnitIdToScan"));
-            this.maxId = Integer.decode((String) configProperties.get("maxUnitIdToScan"));
+            this.port = Integer.decode((String) configProperties.getOrDefault("port", DEFAULT_PORT_PARAM_VALUE_STR));
+            this.minId = Integer.decode(
+                    (String) configProperties.getOrDefault("minUnitIdToScan", DEFAULT_MINUNITID_PARAM_VALUE_STR));
+            this.maxId = Integer.decode(
+                    (String) configProperties.getOrDefault("maxUnitIdToScan", DEFAULT_MAXUNITID_PARAM_VALUE_STR));
 
             logger.debug("MyTHSensorsDiscoveryService.activate host: {}:{}, id to scan {} - {}", host, port, minId,
                     maxId);

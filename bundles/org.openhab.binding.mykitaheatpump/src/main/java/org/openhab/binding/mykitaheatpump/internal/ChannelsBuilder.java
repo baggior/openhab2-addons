@@ -5,13 +5,13 @@ import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.thing.Channel;
-import org.eclipse.smarthome.core.thing.ChannelUID;
-import org.eclipse.smarthome.core.thing.binding.builder.ChannelBuilder;
-import org.eclipse.smarthome.core.thing.type.ChannelKind;
-import org.eclipse.smarthome.core.thing.type.ChannelTypeUID;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
 import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.DataTypeEnum;
+import org.openhab.core.thing.Channel;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.binding.builder.ChannelBuilder;
+import org.openhab.core.thing.type.ChannelKind;
+import org.openhab.core.thing.type.ChannelTypeUID;
 
 @NonNullByDefault
 public class ChannelsBuilder {
@@ -46,31 +46,37 @@ public class ChannelsBuilder {
                 DataTypeEnum type = dataType.type;
 
                 Channel ch = this.buildChannel(id, label, type);
-                ret.add(ch);
+                if (ch != null) {
+                    ret.add(ch);
+                }
             });
         }
 
         return ret;
     }
 
-    private Channel buildChannel(String id, String label, DataTypeEnum type) {
+    private @Nullable Channel buildChannel(String id, String label, DataTypeEnum type) {
         ChannelUID channelUID = channelsHandler.getChannelUID(id);
-        String acceptedItemType = this.convertToItemType(type);
+        if (channelUID != null) {
+            String acceptedItemType = this.convertToItemType(type);
 
-        ChannelBuilder builder = ChannelBuilder.create(channelUID, acceptedItemType).withLabel(label);
+            ChannelBuilder builder = ChannelBuilder.create(channelUID, acceptedItemType).withLabel(label);
+            ChannelTypeUID ctypeUUID = this.convertToChannelType(type);
+            if (ctypeUUID != null) {
+                builder.withType(ctypeUUID);
+            }
 
-        ChannelTypeUID ctypeUUID = this.convertToChannelType(type);
-        if (ctypeUUID != null) {
-            builder.withType(ctypeUUID);
+            ChannelKind cKind = this.convertToChannelKind(type);
+            if (cKind != null) {
+                builder.withKind(cKind);
+            }
+
+            Channel ch = builder.build();
+            return ch;
         }
 
-        ChannelKind cKind = this.convertToChannelKind(type);
-        if (cKind != null) {
-            builder.withKind(cKind);
-        }
+        return null;
 
-        Channel ch = builder.build();
-        return ch;
     }
 
     private @Nullable ChannelKind convertToChannelKind(DataTypeEnum type) {
