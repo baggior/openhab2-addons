@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="mykitaheatpump"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<!-- Sample Test Thing Type -->
+    <thing-type id="test">
+        <label>Test Thing</label>
+        <description>Sample Test thing for MyKitaHeatPump Binding</description>
+        <config-description-ref uri="mykitaheatpump:kita:cfg_descr"></config-description-ref>
+    
+    </thing-type>
+    
+    <!-- KITA thing type -->
+	<thing-type id="kita">
+		<label>Kita Thing</label>
+		<description>Thing for MyKitaHeatPump Binding</description>
+		<category>HVAC</category>
+
+        <!-- CHANNELS -->
+<!--         <channels> -->
+<!--           <channel typeId="temperature-ro-ctype" id="b1"> -->
+<!--             <label>B1: subcooling temperature in HP mode [°C]</label> -->
+<!--           </channel> -->
+<!--           <channel typeId="temperature-ro-ctype" id="b3"> -->
+<!--             <label>B3: sanitary hot water puffer temperature [°C]</label> -->
+<!--           </channel> -->
+<!--           <channel typeId="temperature-ro-ctype" id="b4"> -->
+<!--             <label>B4: inlet water temperature [°C]</label> -->
+<!--           </channel>           -->
+<!--         </channels> -->
+		
+		<config-description uri="mykitaheatpump:kita:cfg_descr">
+			<parameter name="host" type="text" required="true">
+                <label>IP Address or hostname</label>
+                <description>Network address of the device</description>
+                <default>localhost</default>
+                <context>network-address</context>
+            </parameter>
+            <parameter name="port" type="integer">
+                <label>Port</label>
+                <description>Port of the slave</description>
+                <default>502</default>
+            </parameter>
+            
+            <parameter name="id" type="integer">
+                <label>Id</label>
+                <description>Slave id. Also known as station address or unit identifier.</description>
+                <default>1</default>
+            </parameter>
+            
+            <parameter name="enableDiscovery" type="boolean">
+                <label>Discovery enabled</label>
+                <description>When enabled we try to find a device specific handler. Turn this on if you're using one of the supported devices.</description>
+                <default>false</default>
+            </parameter>
+            
+            
+            <!-- connection handling -->
+            <parameter name="timeBetweenTransactionsMillis" type="integer" min="0">
+                <label>Time between transactions (ms)</label>
+                <description>How long to delay we must have at minimum between two consecutive MODBUS transactions. In milliseconds.
+                </description>
+                <default>60</default>
+            </parameter>
+            <parameter name="timeBetweenReconnectMillis" type="integer" min="0">
+                <label>Time between reconnections (ms)</label>
+                <description>How long to wait to before trying to establish a new connection after the previous one has been
+                    disconnected. In milliseconds.</description>
+                <default>0</default>
+                <advanced>true</advanced>
+            </parameter>
+            <parameter name="connectMaxTries" type="integer" min="1">
+                <label>Maximum connection tries</label>
+                <description>How many times we try to establish the connection. Should be at least 1.</description>
+                <default>1</default>
+                <advanced>true</advanced>
+            </parameter>
+            <parameter name="reconnectAfterMillis" type="integer" min="0">
+                <label>Disconnect and establish the connection again after this time (ms)</label>
+                <description>The connection is kept open at least the time specified here. Value of zero means that connection is
+                    disconnected after every MODBUS transaction. In milliseconds.</description>
+                <default>0</default>
+                <advanced>true</advanced>
+            </parameter>
+            <parameter name="connectTimeoutMillis" type="integer" min="0">
+                <label>Timeout for establishing the connection (ms)</label>
+                <description>The maximum time that is waited when establishing the connection. Value of zero means that system/OS
+                    default is respected. In milliseconds.</description>
+                <default>10000</default>
+                <advanced>true</advanced>
+            </parameter>
+            
+            <!--  poller config -->
+            <parameter name="refresh" type="integer" min="0">
+                <label>Poll interval (ms)</label>
+                <description>Poll interval in milliseconds. Use zero to disable automatic polling.</description>
+                <default>500</default>
+            </parameter>
+            <parameter name="maxTries" type="integer" min="1">
+                <label>Maximum tries when reading</label>
+                <default>3</default>
+                <description>Number of tries when reading data, if some of the reading fail. For single try, enter 1.</description>
+            </parameter>
+            <parameter name="cacheMillis" type="integer" min="0">
+                <label>Cache duration (ms)</label>
+                <default>50</default>
+                <description><![CDATA[Duration for data cache to be valid, in milliseconds. This cache is used only to serve REFRESH commands. 
+                    <br />
+                    <br />Use zero to disable the caching.]]></description>
+                <advanced>true</advanced>
+            </parameter>
+            
+            
+            <!-- data channel config -->
+            <parameter name="updateUnchangedValuesEveryMillis" type="integer" min="0">
+                <label>Interval for updating unchanged values (ms)</label>
+                <default>1000</default>
+                <description>Interval to update unchanged values. Normally unchanged values are not updated. In milliseconds.</description>
+                <advanced>true</advanced>
+            </parameter>
+            
+            
+		</config-description>
+		
+
+
+	</thing-type>
+	
+	
+	<!-- Sample Channel Type -->
+	<channel-type id="sample-channel">
+		<item-type>Number</item-type>
+		<label>Test Channel</label>
+		<description>Sample numeric channel for Test thing MyKitaHeatPump Binding</description>
+	</channel-type>
+	
+	<channel-type id="temperature-ro-ctype">
+        <item-type>Number:Temperature</item-type>
+        <kind>state</kind>
+        <label>Temperature</label>                
+        <category>Temperature</category>
+        <state readOnly="true" pattern="%.1f %unit%" />
+    </channel-type>
+    <channel-type id="temperature-rw-ctype">
+        <item-type>Number:Temperature</item-type>
+        <kind>state</kind>
+        <label>Temperature Set</label>                
+        <category>Heating</category>
+        <state readOnly="false" pattern="%.1f %unit%" min="0" max="80" step="0.1" />
+    </channel-type>
+	<channel-type id="flow-ro-ctype">
+	    <item-type>Number:VolumetricFlowRate</item-type>
+        <kind>state</kind>
+        <label>Water Flow</label>                
+        <category>Flow</category>
+        <state readOnly="true" pattern="%.1f l/m" />
+	</channel-type>
+	<channel-type id="rps-ro-ctype">
+        <item-type>Number</item-type>
+        <kind>state</kind>
+        <label>Rps</label>
+        <state readOnly="true" pattern="%.1f rps" />
+    </channel-type>
+	<channel-type id="pct-ctype">
+        <item-type>Number:Dimensionless</item-type>
+        <kind>state</kind>
+        <label>Percent</label>                      
+        <state readOnly="true" pattern="%.1f %%" />
+    </channel-type>
+    <channel-type id="cop-ctype">
+        <item-type>Number:Dimensionless</item-type>
+        <kind>state</kind>
+        <label>COP</label>                      
+        <category>qualityofservice</category>
+        <state readOnly="true" pattern="%.1f" />
+    </channel-type>
+    
+</thing:thing-descriptions>

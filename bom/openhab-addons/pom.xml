@@ -1549,6 +1549,20 @@
       <artifactId>org.openhab.voice.voicerss</artifactId>
       <version>${project.version}</version>
     </dependency>
-  </dependencies>
+  
 
+
+<!--MY -->
+	<dependency>
+      <groupId>org.openhab.addons.bundles</groupId>
+      <artifactId>org.openhab.binding.mythsensors</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+	<dependency>
+      <groupId>org.openhab.addons.bundles</groupId>
+      <artifactId>org.openhab.binding.mykitaheatpump</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+	
+  </dependencies>
 </project>
