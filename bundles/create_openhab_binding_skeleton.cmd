@@ -3,6 +3,8 @@
 SETLOCAL
 SET ARGC=0
 
+SET JAVA_HOME="C:\Java\jdk-11.0.4+11"
+
 FOR %%x IN (%*) DO SET /A ARGC+=1
 
 IF %ARGC% NEQ 3 (
