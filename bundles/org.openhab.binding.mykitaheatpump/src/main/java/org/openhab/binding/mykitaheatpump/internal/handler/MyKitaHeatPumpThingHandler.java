@@ -10,20 +10,20 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.mykitaheatpump.internal;
+package org.openhab.binding.mykitaheatpump.internal.handler;
 
-import java.util.function.Supplier;
+import java.util.ArrayList;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.core.common.registry.Identifiable;
-import org.openhab.core.io.transport.modbus.ModbusManager;
+import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpConfiguration;
 import org.openhab.core.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
+import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.ThingStatusInfo;
-import org.openhab.core.thing.ThingUID;
+import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.types.State;
 
 /**
@@ -32,7 +32,7 @@ import org.openhab.core.types.State;
  *
  */
 @NonNullByDefault
-public interface MyKitaHeatPumpThingHandler extends Identifiable<ThingUID> {
+public interface MyKitaHeatPumpThingHandler extends ThingHandler {
 
     /**
      * Gets the {@link ModbusSlaveEndpoint} represented by the thing
@@ -52,13 +52,6 @@ public interface MyKitaHeatPumpThingHandler extends Identifiable<ThingUID> {
     public int getSlaveId();
 
     /**
-     * Get {@link ModbusManager} supplier
-     *
-     * @return reference to ModbusManager
-     */
-    public Supplier<ModbusManager> getManagerRef();
-
-    /**
      * Return true if auto discovery is enabled for this endpoint
      *
      * @return boolean true if the discovery is enabled
@@ -67,14 +60,18 @@ public interface MyKitaHeatPumpThingHandler extends Identifiable<ThingUID> {
 
     public @Nullable MyKitaHeatPumpConfiguration getConfiguration();
 
-    public void updateThingStatus(ThingStatus offline, @Nullable ThingStatusDetail communicationError,
-            @Nullable String format);
+    public void updateThingStatus(ThingStatus offline, @Nullable ThingStatusDetail detail,
+            @Nullable String description);
 
     public boolean hasConfigurationError();
 
     public ThingStatusInfo getStatusInfo();
 
+    public void updateChannelState(ChannelUID uid, State state);
+
+    public boolean isDisposed();
+
     public ChannelsHandler getChannelsHandler();
 
-    public void tryUpdateChannelState(ChannelUID uid, State state);
+    public void editThingChannels(ArrayList<Channel> chennels);
 }

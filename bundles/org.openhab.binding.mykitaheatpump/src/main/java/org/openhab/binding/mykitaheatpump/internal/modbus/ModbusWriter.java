@@ -4,46 +4,44 @@ import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpBindingConstants;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpConfiguration;
-import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpThingHandler;
-import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
-import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType;
-import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.RegisterTypeEnum;
+import org.openhab.binding.mykitaheatpump.internal.kita.KitaHeatPumpDataItem;
+import org.openhab.binding.mykitaheatpump.internal.kita.KitaHeatPumpDataItem.RegisterTypeEnum;
+import org.openhab.binding.mykitaheatpump.internal.kita.KitaManager;
+import org.openhab.core.io.transport.modbus.AsyncModbusFailure;
+import org.openhab.core.io.transport.modbus.AsyncModbusWriteResult;
 import org.openhab.core.io.transport.modbus.ModbusBitUtilities;
 import org.openhab.core.io.transport.modbus.ModbusConstants;
-import org.openhab.core.io.transport.modbus.ModbusManager;
 import org.openhab.core.io.transport.modbus.ModbusRegisterArray;
 import org.openhab.core.io.transport.modbus.ModbusWriteCallback;
 import org.openhab.core.io.transport.modbus.ModbusWriteCoilRequestBlueprint;
 import org.openhab.core.io.transport.modbus.ModbusWriteRegisterRequestBlueprint;
 import org.openhab.core.io.transport.modbus.ModbusWriteRequestBlueprint;
-import org.openhab.core.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
-import org.openhab.core.io.transport.modbus.internal.BasicWriteTask;
+import org.openhab.core.io.transport.modbus.exception.ModbusConnectionException;
+import org.openhab.core.io.transport.modbus.exception.ModbusTransportException;
+import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
+import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.types.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @NonNullByDefault
-public class ModbusWriter {
+public class ModbusWriter extends ModbusManagerBase {
 
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    final MyKitaHeatPumpThingHandler myThingHandler;
-
-    final KitaHeatPump kita;
-
-    public ModbusWriter(KitaHeatPump kita, MyKitaHeatPumpThingHandler myThingHandler) {
-        this.myThingHandler = myThingHandler;
-        this.kita = kita;
+    public ModbusWriter(KitaManager kitaManager) {
+        super(kitaManager);
     }
 
     public void writeData(String kitaDataId, Command originalCommand, ModbusWriteCallback modbusWriteCallback) {
-        MyKitaHeatPumpConfiguration config = this.myThingHandler.getConfiguration();
+        MyKitaHeatPumpConfiguration config = this.kitaManager.getKitaHeatPumpThingHandler().getConfiguration();
 
         if (config != null) {
-            KitaHeatPumpDataType dataType = kita.getDataType(kitaDataId);
+            KitaHeatPumpDataItem dataType = this.kitaManager.getKita().getDataType(kitaDataId);
             if (dataType != null) {
 
                 Command command = this.convertCommand(dataType, originalCommand);
@@ -52,17 +50,10 @@ public class ModbusWriter {
                         command, config);
 
                 if (request != null) {
-                    ModbusSlaveEndpoint slaveEndpoint = this.myThingHandler.asSlaveEndpoint();
+                    var comms = this.kitaManager.getCommunicationInterface();
+                    logger.trace("Submitting write task {} to endpoint {}", request, comms.getEndpoint());
+                    comms.submitOneTimeWrite(request, this::onWriteResponse, this::onWriteError);
 
-                    ModbusManager manager = this.myThingHandler.getManagerRef().get();
-                    // if (request == null || slaveEndpoint == null || manager == null) {
-                    // return;
-                    // }
-
-                    BasicWriteTask writeTask = new BasicWriteTask(slaveEndpoint, request, modbusWriteCallback);
-
-                    logger.trace("Submitting write task: {}", writeTask);
-                    manager.submitOneTimeWrite(writeTask);
                 }
             }
         }
@@ -107,12 +98,12 @@ public class ModbusWriter {
         return request;
     }
 
-    private Command convertCommand(KitaHeatPumpDataType dataType, Command originalCommand) {
+    private Command convertCommand(KitaHeatPumpDataItem dataType, Command originalCommand) {
 
         double factor = this.writeFactor(dataType);
 
         if (originalCommand instanceof QuantityType) {
-            DecimalType convertedCommand = new DecimalType(((QuantityType) originalCommand).doubleValue() * factor);
+            DecimalType convertedCommand = new DecimalType(((Number) originalCommand).doubleValue() * factor);
             return convertedCommand;
         } else if (originalCommand instanceof DecimalType && factor != 1) {
             DecimalType convertedCommand = new DecimalType(((DecimalType) originalCommand).doubleValue() * factor);
@@ -121,7 +112,7 @@ public class ModbusWriter {
         return originalCommand;
     }
 
-    private double writeFactor(KitaHeatPumpDataType dataType) {
+    private double writeFactor(KitaHeatPumpDataItem dataType) {
         if (dataType.register == RegisterTypeEnum.holding) {
             switch (dataType.type) {
                 case _bool:
@@ -145,6 +136,57 @@ public class ModbusWriter {
             }
         }
         return 1;
+    }
+
+    private synchronized void onWriteResponse(AsyncModbusWriteResult result) {
+        if (!this.kitaManager.isActive()) {
+            logger.warn("kitaManager not active");
+            return;
+        }
+        logger.debug("Successful write, matching request {}", result.getRequest());
+
+        ChannelUID lastWriteSuccessUID = this.kitaManager.getKitaHeatPumpThingHandler().getChannelsHandler()
+                .getChannelUID(MyKitaHeatPumpBindingConstants.CHANNEL_LAST_WRITE_SUCCESS);
+        if (lastWriteSuccessUID != null) {
+            this.kitaManager.getKitaHeatPumpThingHandler().getChannelsHandler().updateChannelState(lastWriteSuccessUID,
+                    new DateTimeType());
+        }
+    }
+
+    private synchronized void onWriteError(AsyncModbusFailure<ModbusWriteRequestBlueprint> failure) {
+        onError(failure.getRequest(), failure.getCause());
+    }
+
+    private synchronized void onError(ModbusWriteRequestBlueprint request, Exception error) {
+        if (!this.kitaManager.isActive()) {
+            logger.warn("kitaManager not active");
+            return;
+        }
+        if (error instanceof ModbusConnectionException) {
+            logger.debug("Thing {} '{}' had {} error on write: {}",
+                    this.kitaManager.getKitaHeatPumpThingHandler().getThing().getUID(),
+                    this.kitaManager.getKitaHeatPumpThingHandler().getThing().getLabel(),
+                    error.getClass().getSimpleName(), error.toString());
+        } else if (error instanceof ModbusTransportException) {
+            logger.debug("Thing {} '{}' had {} error on write: {}",
+                    this.kitaManager.getKitaHeatPumpThingHandler().getThing().getUID(),
+                    this.kitaManager.getKitaHeatPumpThingHandler().getThing().getLabel(),
+                    error.getClass().getSimpleName(), error.toString());
+        } else {
+            logger.error(
+                    "Thing {} '{}' had {} error on write: {} (message: {}). Stack trace follows since this is unexpected error.",
+                    this.kitaManager.getKitaHeatPumpThingHandler().getThing().getUID(),
+                    this.kitaManager.getKitaHeatPumpThingHandler().getThing().getLabel(), error.getClass().getName(),
+                    error.toString(), error.getMessage(), error);
+        }
+
+        ChannelUID lastWriteErrorUID = this.kitaManager.getKitaHeatPumpThingHandler().getChannelsHandler()
+                .getChannelUID(MyKitaHeatPumpBindingConstants.CHANNEL_LAST_WRITE_ERROR);
+        if (lastWriteErrorUID != null) {
+            this.kitaManager.getKitaHeatPumpThingHandler().getChannelsHandler().updateChannelState(lastWriteErrorUID,
+                    new DateTimeType());
+        }
+
     }
 
 }

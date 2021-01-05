@@ -1,27 +1,19 @@
-package org.openhab.binding.mykitaheatpump.internal.test.handler;
+package org.openhab.binding.mykitaheatpump.internal.handler;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Supplier;
 
-import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.mykitaheatpump.internal.ModbusConfigurationException;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpBindingConstants;
 import org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpConfiguration;
 import org.openhab.core.io.transport.modbus.AsyncModbusReadResult;
-import org.openhab.core.io.transport.modbus.BitArray;
 import org.openhab.core.io.transport.modbus.ModbusManager;
 import org.openhab.core.io.transport.modbus.ModbusReadCallback;
 import org.openhab.core.io.transport.modbus.ModbusReadFunctionCode;
-import org.openhab.core.io.transport.modbus.ModbusReadRequestBlueprint;
-import org.openhab.core.io.transport.modbus.ModbusRegisterArray;
-import org.openhab.core.io.transport.modbus.PollTask;
 import org.openhab.core.io.transport.modbus.endpoint.EndpointPoolConfiguration;
-import org.openhab.core.io.transport.modbus.endpoint.ModbusSlaveEndpoint;
 import org.openhab.core.io.transport.modbus.endpoint.ModbusTCPSlaveEndpoint;
-import org.openhab.core.io.transport.modbus.internal.BasicPollTask;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -39,6 +31,7 @@ import org.slf4j.LoggerFactory;
 /*
 
 */
+@NonNullByDefault
 public class TestHandler extends BaseThingHandler implements ModbusReadCallback { // ,
                                                                                   // MyKitaHeatPumpThingHandler
                                                                                   // {
@@ -49,11 +42,11 @@ public class TestHandler extends BaseThingHandler implements ModbusReadCallback 
     private @Nullable ModbusTCPSlaveEndpoint endpoint;
     private @Nullable EndpointPoolConfiguration poolConfiguration;
 
-    protected Supplier<ModbusManager> managerRef;
+    protected ModbusManager manager;
 
-    public TestHandler(Thing thing, Supplier<ModbusManager> managerRef) {
+    public TestHandler(Thing thing, ModbusManager manager) {
         super(thing);
-        this.managerRef = managerRef;
+        this.manager = manager;
         // this.kita = new KitaHeatPump();
         // this.modbusPollers = new ModbusPollers(kita, this);
         // this.modbusWriter = new ModbusWriter(kita, this);
@@ -115,8 +108,7 @@ public class TestHandler extends BaseThingHandler implements ModbusReadCallback 
             if (endpoint == null) {
                 throw new IllegalArgumentException("endpoint null after configuration!");
             }
-            managerRef.get().addListener(this);
-            managerRef.get().setEndpointPoolConfiguration(endpoint, poolConfiguration);
+            // manager.setEndpointPoolConfiguration(endpoint, poolConfiguration);
 
             this.initializePoolers();
 
@@ -136,40 +128,39 @@ public class TestHandler extends BaseThingHandler implements ModbusReadCallback 
         final int start = 1;
         final int length = 123; // max 123 uint Modbus.MAX_MESSAGE_LENGTH =256 bytes
 
-        if (this.config != null) {
-            ModbusReadRequestBlueprint request = new ModbusReadRequestBlueprint(this.config.id, functionCode, start,
-                    length, this.config.maxTries);
-            if (this.endpoint != null) {
-                PollTask task = new BasicPollTask(this.endpoint, request, this);
-
-                if (this.config.refresh <= 0L) {
-                    logger.debug("Not registering polling with ModbusManager since refresh disabled");
-
-                } else {
-                    logger.info(
-                            "Registering polling with ModbusManager:\n function {}, start {}, length {}, refresh {}",
-                            functionCode, start, length, this.config.refresh);
-
-                    this.managerRef.get().registerRegularPoll(task, this.config.refresh, 0);
-
-                }
-            }
-        }
+        // if (this.config != null) {
+        // ModbusReadRequestBlueprint request = new ModbusReadRequestBlueprint(this.config.id, functionCode, start,
+        // length, this.config.maxTries);
+        // if (this.endpoint != null) {
+        // PollTask task = new BasicPollTask(this.endpoint, request, this);
+        //
+        // if (this.config.refresh <= 0L) {
+        // logger.debug("Not registering polling with ModbusManager since refresh disabled");
+        //
+        // } else {
+        // logger.info(
+        // "Registering polling with ModbusManager:\n function {}, start {}, length {}, refresh {}",
+        // functionCode, start, length, this.config.refresh);
+        //
+        // this.manager.registerRegularPoll(task, this.config.refresh, 0);
+        //
+        // }
+        // }
+        // }
     }
 
     private void disposePollers() {
-        this.managerRef.get().getRegisteredRegularPolls().forEach(pollTask -> {
-            ModbusReadRequestBlueprint requestBlueprint = pollTask.getRequest();
-
-            logger.info("Unregistering polling from ModbusManager:\n unitId {}, function {}, start {}, length {}",
-                    requestBlueprint.getUnitID(), requestBlueprint.getFunctionCode(), requestBlueprint.getReference(),
-                    requestBlueprint.getDataLength());
-            this.managerRef.get().unregisterRegularPoll(pollTask);
-        });
+        // this.manager.getRegisteredRegularPolls().forEach(pollTask -> {
+        // ModbusReadRequestBlueprint requestBlueprint = pollTask.getRequest();
+        //
+        // logger.info("Unregistering polling from ModbusManager:\n unitId {}, function {}, start {}, length {}",
+        // requestBlueprint.getUnitID(), requestBlueprint.getFunctionCode(), requestBlueprint.getReference(),
+        // requestBlueprint.getDataLength());
+        // this.managerRef.get().unregisterRegularPoll(pollTask);
+        // });
 
     }
 
-    @NonNull
     private List<Channel> buildChannels() {
 
         List<Channel> ret = new ArrayList<Channel>();
@@ -208,102 +199,66 @@ public class TestHandler extends BaseThingHandler implements ModbusReadCallback 
          * }
          */
 
-        if (command != null) {
+        if (command instanceof RefreshType) {
+            // TODO: handle data refresh
 
-            if (command instanceof RefreshType) {
-                // TODO: handle data refresh
+            this.updateStatus(ThingStatus.ONLINE);
 
-                this.updateStatus(ThingStatus.ONLINE);
+        } else {
+            String kitaDataId = channelUID.getId();
 
-            } else {
-                String kitaDataId = channelUID.getId();
+            // this.modbusWriter.writeData(kitaDataId, command, new ModbusWriteCallback() {
+            //
+            // @Override
+            // public void onError(ModbusWriteRequestBlueprint request, Exception error) {
+            // logger.error("Write FAILED Command: {} \n\t Request: {} \n\t ERROR: {}", command, request,
+            // error);
+            //
+            // MyKitaHeatPumpHandler.this.updateThingStatus(ThingStatus.OFFLINE,
+            // ThingStatusDetail.COMMUNICATION_ERROR,
+            // String.format("Error (%s) with read. Request: %s. Description: %s. Message: %s",
+            // error.getClass().getSimpleName(), request, error.toString(),
+            // error.getMessage()));
+            //
+            // }
+            //
+            // @Override
+            // public void onWriteResponse(ModbusWriteRequestBlueprint request, ModbusResponse response) {
+            // // TODO Auto-generated method stub
+            // logger.debug("Write OK Command: {} \n\t Request: {} \n\t Response: {}", command, request,
+            // response);
+            //
+            // MyKitaHeatPumpHandler.this.updateThingStatus(ThingStatus.ONLINE, null, null);
+            //
+            // if (command instanceof State) {
+            // MyKitaHeatPumpHandler.this.tryUpdateChannelState(channelUID, ((State) command));
+            // }
+            //
+            // }
+            //
+            // });
 
-                // this.modbusWriter.writeData(kitaDataId, command, new ModbusWriteCallback() {
-                //
-                // @Override
-                // public void onError(ModbusWriteRequestBlueprint request, Exception error) {
-                // logger.error("Write FAILED Command: {} \n\t Request: {} \n\t ERROR: {}", command, request,
-                // error);
-                //
-                // MyKitaHeatPumpHandler.this.updateThingStatus(ThingStatus.OFFLINE,
-                // ThingStatusDetail.COMMUNICATION_ERROR,
-                // String.format("Error (%s) with read. Request: %s. Description: %s. Message: %s",
-                // error.getClass().getSimpleName(), request, error.toString(),
-                // error.getMessage()));
-                //
-                // }
-                //
-                // @Override
-                // public void onWriteResponse(ModbusWriteRequestBlueprint request, ModbusResponse response) {
-                // // TODO Auto-generated method stub
-                // logger.debug("Write OK Command: {} \n\t Request: {} \n\t Response: {}", command, request,
-                // response);
-                //
-                // MyKitaHeatPumpHandler.this.updateThingStatus(ThingStatus.ONLINE, null, null);
-                //
-                // if (command instanceof State) {
-                // MyKitaHeatPumpHandler.this.tryUpdateChannelState(channelUID, ((State) command));
-                // }
-                //
-                // }
-                //
-                // });
-
-            }
         }
 
     }
 
     //////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    synchronized public void onEndpointPoolConfigurationSet(ModbusSlaveEndpoint otherEndpoint,
-            @Nullable EndpointPoolConfiguration otherPoolConfiguration) {
-        if (endpoint == null) {
-            return;
-        }
-        EndpointPoolConfiguration poolConfiguration = this.poolConfiguration;
-        if (poolConfiguration != null && otherEndpoint.equals(this.endpoint)
-                && !poolConfiguration.equals(otherPoolConfiguration)) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    this.formatConflictingParameterError(otherPoolConfiguration));
-        }
-    }
-
-    private String formatConflictingParameterError(@Nullable EndpointPoolConfiguration otherPoolConfig) {
-        return String.format(
-                "Endpoint '%s' has conflicting parameters: parameters of this thing (%s '%s') %s are different from some other things parameter: %s. Ensure that all endpoints pointing to tcp slave '%s:%s' have same parameters.",
-                endpoint, thing.getUID(), this.thing.getLabel(), this.poolConfiguration, otherPoolConfig,
-                Optional.ofNullable(this.endpoint).map(e -> e.getAddress()).orElse("<null>"),
-                Optional.ofNullable(this.endpoint).map(e -> String.valueOf(e.getPort())).orElse("<null>"));
-    }
+    // @Override
+    // synchronized public void onEndpointPoolConfigurationSet(ModbusSlaveEndpoint otherEndpoint,
+    // @Nullable EndpointPoolConfiguration otherPoolConfiguration) {
+    // if (endpoint == null) {
+    // return;
+    // }
+    // EndpointPoolConfiguration poolConfiguration = this.poolConfiguration;
+    // if (poolConfiguration != null && otherEndpoint.equals(this.endpoint)
+    // && !poolConfiguration.equals(otherPoolConfiguration)) {
+    // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+    // this.formatConflictingParameterError(otherPoolConfiguration));
+    // }
+    // }
 
     // ModbusReadCallback implementations
-
-    @Override
-    public void onRegisters(@NonNull ModbusReadRequestBlueprint request, @NonNull ModbusRegisterArray registers) {
-        // TODO Auto-generated method stub
-        this.logger.debug("request <- {}\n response -> {}", request, registers);
-        resetCommunicationError();
-    }
-
-    @Override
-    public void onBits(@NonNull ModbusReadRequestBlueprint request, @NonNull BitArray bits) {
-        // TODO Auto-generated method stub
-        this.logger.debug("request <- {}\n response -> {}", request, bits);
-        resetCommunicationError();
-
-    }
-
-    @Override
-    public void onError(@NonNull ModbusReadRequestBlueprint request, @NonNull Exception error) {
-        // TODO Auto-generated method stub
-        this.logger.error("Thing {} received error {} for request {}", this.getThing().getUID(), error, request);
-
-        this.updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                String.format("Error with read: %s: %s", error.getClass().getName(), error.getMessage()));
-
-    }
 
     private void resetCommunicationError() {
         ThingStatusInfo statusInfo = this.getThing().getStatusInfo();
@@ -316,6 +271,8 @@ public class TestHandler extends BaseThingHandler implements ModbusReadCallback 
     @Override
     public void handle(AsyncModbusReadResult result) {
         // TODO Auto-generated method stub
+        logger.debug("handle.. \n\trequest: {}\n\tresult: {}", result.getRequest(), result);
 
+        resetCommunicationError();
     }
 }

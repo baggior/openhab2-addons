@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.mykitaheatpump.internal;
+package org.openhab.binding.mykitaheatpump.internal.handler;
 
 import static org.openhab.binding.mykitaheatpump.internal.MyKitaHeatPumpBindingConstants.*;
 
@@ -19,7 +19,6 @@ import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.mykitaheatpump.internal.test.handler.TestHandler;
 import org.openhab.core.io.transport.modbus.ModbusManager;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
@@ -62,11 +61,11 @@ public class MyKitaHeatPumpHandlerFactory extends BaseThingHandlerFactory {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (THING_TYPE_KITA_REGISTERS.equals(thingTypeUID)) {
-            logger.info("Thing created label: '{}', uuid: {}", thing.getLabel(), thingTypeUID);
-            return new MyKitaHeatPumpHandler(thing, () -> manager);
+            logger.info("Thing handler created label: '{}', uuid: {}", thing.getLabel(), thingTypeUID);
+            return new MyKitaHeatPumpHandlerImpl(thing, manager);
         } else if (THING_TYPE_TEST.equals(thingTypeUID)) {
-            logger.info("Thing TEST created label: '{}', uuid: {}", thing.getLabel(), thingTypeUID);
-            return new TestHandler(thing, () -> manager);
+            logger.info("Thing handler TEST created label: '{}', uuid: {}", thing.getLabel(), thingTypeUID);
+            return new TestHandler(thing, manager);
         }
 
         return null;

@@ -1,25 +1,21 @@
-package org.openhab.binding.mykitaheatpump.internal;
+package org.openhab.binding.mykitaheatpump.internal.kita;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPump;
-import org.openhab.binding.mykitaheatpump.internal.models.KitaHeatPumpDataType.DataTypeEnum;
-import org.openhab.core.thing.Channel;
-import org.openhab.core.thing.ChannelUID;
-import org.openhab.core.thing.binding.builder.ChannelBuilder;
-import org.openhab.core.thing.type.ChannelKind;
+import org.openhab.binding.mykitaheatpump.internal.handler.ChannelsHandler;
+import org.openhab.binding.mykitaheatpump.internal.handler.ChannelsHandler.BuildChannelConfig;
+import org.openhab.binding.mykitaheatpump.internal.kita.KitaHeatPumpDataItem.DataTypeEnum;
 import org.openhab.core.thing.type.ChannelTypeUID;
 
 @NonNullByDefault
-public class ChannelsBuilder {
+class ChannelsBuilder {
     @Nullable
     private KitaHeatPump kita;
     private final ChannelsHandler channelsHandler;
 
-    ChannelsBuilder(ChannelsHandler channelsHandler) {
+    private ChannelsBuilder(ChannelsHandler channelsHandler) {
         this.channelsHandler = channelsHandler;
         // this.thingUid = channelsHandler.thingHandler.getUID().getAsString();
     }
@@ -36,52 +32,80 @@ public class ChannelsBuilder {
         return this;
     }
 
-    List<Channel> build() {
-        List<Channel> ret = new ArrayList<Channel>();
+    public void build() {
+
+        var buildChConfig = new ArrayList<BuildChannelConfig>();
         if (this.kita != null) {
-            this.kita.getData().forEach((dataType, dataValue) -> {
+
+            this.kita.getDataStore().forEach((dataType, dataValue) -> {
                 // todo
                 String id = dataType.name;
                 String label = dataType.label;
                 DataTypeEnum type = dataType.type;
 
-                Channel ch = this.buildChannel(id, label, type);
-                if (ch != null) {
-                    ret.add(ch);
+                var buildChConfigItem = this.channelConfig(id, label, type);
+                if (buildChConfigItem != null) {
+                    buildChConfig.add(buildChConfigItem);
                 }
             });
+
+        }
+        channelsHandler.rebuildChannels(buildChConfig);
+
+    }
+
+    private @Nullable BuildChannelConfig channelConfig(String id, String label, DataTypeEnum type) {
+        String acceptedItemType = this.convertToItemType(type);
+        String channelTypeID = convertToChannelTypeID(type);
+        String cKind = this.convertToChannelKind(type);
+        if (channelTypeID != null && cKind != null) {
+            return new BuildChannelConfig(id, acceptedItemType, label, channelTypeID, cKind);
+        }
+        return null;
+    }
+
+    private @Nullable String convertToChannelKind(DataTypeEnum type) {
+        // TODO Auto-generated method stub
+        // ChannelKind.TRIGGER;
+        return "STATE";
+    }
+
+    private @Nullable String convertToChannelTypeID(DataTypeEnum type) {
+        String ret = null;
+        switch (type) {
+            case _bool:
+                break;
+            case _switch:
+                break;
+            case dateTime:
+                break;
+            case number:
+                break;
+            case string:
+                break;
+            case temperature_ro:
+                ret = ("temperature-ro-ctype");
+                break;
+            case temperature_rw:
+                ret = ("temperature-rw-ctype");
+                break;
+            case flow_ro:
+                ret = ("flow-ro-ctype");
+                break;
+            case pct:
+                ret = ("pct-ctype");
+                break;
+            case cop:
+                ret = ("cop-ctype");
+                break;
+            case rps_ro:
+                ret = ("rps-ro-ctype");
+                break;
+            default:
+                break;
         }
 
         return ret;
-    }
-
-    private @Nullable Channel buildChannel(String id, String label, DataTypeEnum type) {
-        ChannelUID channelUID = channelsHandler.getChannelUID(id);
-        if (channelUID != null) {
-            String acceptedItemType = this.convertToItemType(type);
-
-            ChannelBuilder builder = ChannelBuilder.create(channelUID, acceptedItemType).withLabel(label);
-            ChannelTypeUID ctypeUUID = this.convertToChannelType(type);
-            if (ctypeUUID != null) {
-                builder.withType(ctypeUUID);
-            }
-
-            ChannelKind cKind = this.convertToChannelKind(type);
-            if (cKind != null) {
-                builder.withKind(cKind);
-            }
-
-            Channel ch = builder.build();
-            return ch;
-        }
-
-        return null;
-
-    }
-
-    private @Nullable ChannelKind convertToChannelKind(DataTypeEnum type) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     private @Nullable ChannelTypeUID convertToChannelType(DataTypeEnum type) {

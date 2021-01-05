@@ -1,9 +1,9 @@
-package org.openhab.binding.mykitaheatpump.internal.models;
+package org.openhab.binding.mykitaheatpump.internal.kita;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
 @NonNullByDefault
-public class KitaHeatPumpDataType {
+public class KitaHeatPumpDataItem {
 
     public static enum DataTypeEnum {
         string,
@@ -36,11 +36,11 @@ public class KitaHeatPumpDataType {
     public RegisterTypeEnum register;
     public int address;
 
-    KitaHeatPumpDataType(String name, int address) {
+    KitaHeatPumpDataItem(String name, int address) {
         this(name, name, DataTypeEnum.number, address, RegisterTypeEnum.holding);
     }
 
-    KitaHeatPumpDataType(String name, String label, DataTypeEnum datatype, int address, RegisterTypeEnum registerType) {
+    KitaHeatPumpDataItem(String name, String label, DataTypeEnum datatype, int address, RegisterTypeEnum registerType) {
         readonly = false;
 
         type = datatype;

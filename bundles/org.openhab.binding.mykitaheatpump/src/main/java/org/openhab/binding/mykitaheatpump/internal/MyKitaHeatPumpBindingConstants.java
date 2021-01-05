@@ -31,4 +31,9 @@ public class MyKitaHeatPumpBindingConstants {
 
     public static final ThingTypeUID THING_TYPE_TEST = new ThingTypeUID(BINDING_ID, "test");
 
+    public static final String CHANNEL_LAST_READ_SUCCESS = "lastReadSuccess";
+    public static final String CHANNEL_LAST_READ_ERROR = "lastReadError";
+    public static final String CHANNEL_LAST_WRITE_SUCCESS = "lastWriteSuccess";
+    public static final String CHANNEL_LAST_WRITE_ERROR = "lastWriteError";
+
 }
